@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CQT 綜合模擬考卷 — 互動版</title>
+<style>
+/* ═══════════════════════════════════════
+   CQT 互動考卷 — Design v2
+   ═══════════════════════════════════════ */
+:root{
+  --navy:#1C3A5F; --teal:#0891B2; --orange:#E97316;
+  --green:#059669; --red:#DC2626; --purple:#7C3AED;
+  --bg:#F0F6FF; --dark:#1E293B; --gray:#64748B;
+  --lgray:#E2E8F0; --white:#fff;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.12);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.18);
+  --radius:12px; --radius-sm:8px;
+  --transition:.18s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Microsoft JhengHei","微軟正黑體",system-ui,Arial,sans-serif;
+  background:var(--bg);color:var(--dark);-webkit-tap-highlight-color:transparent;}
+
+/* ════════════════════════════════════════
+   START SCREEN
+   ════════════════════════════════════════ */
+#start{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:1.5rem;
+  background:linear-gradient(145deg,#0f2444 0%,#1C3A5F 45%,#1a5f7a 100%);
+  position:relative;overflow:hidden;
+}
+#start::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 70% 30%,rgba(8,145,178,.25) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.start-card{
+  background:rgba(255,255,255,.97);
+  border-radius:20px;padding:2rem 2rem 1.5rem;
+  max-width:620px;width:100%;
+  box-shadow:var(--shadow-lg);
+  position:relative;z-index:1;
+}
+
+/* Logo / hero */
+.start-logo{
+  font-size:2.4rem;font-weight:900;color:var(--navy);
+  letter-spacing:-.02em;line-height:1.1;
+}
+.start-sub{
+  font-size:1rem;color:var(--teal);font-weight:600;
+  margin-top:.25rem;margin-bottom:1.2rem;
+}
+
+/* Info grid */
+.start-info{
+  display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.3rem;
+}
+.info-box{
+  background:var(--bg);border-radius:10px;padding:.8rem 1rem;
+  border-left:3px solid var(--teal);
+}
+.info-box b{color:var(--navy);display:block;margin-bottom:.2rem;font-size:.88rem;}
+.info-box span{color:var(--gray);font-size:.8rem;line-height:1.4;}
+
+/* Section label */
+.mode-label{
+  font-weight:700;color:var(--navy);font-size:.9rem;
+  margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem;
+}
+
+/* Mode grid */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:.8rem;}
+.mode-btn{
+  border:2px solid var(--lgray);border-radius:var(--radius);padding:1rem;
+  cursor:pointer;text-align:left;background:var(--white);
+  transition:var(--transition);position:relative;
+}
+.mode-btn:hover{border-color:var(--teal);background:#f0f9ff;transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+.mode-btn.selected{
+  border-color:var(--navy);background:#dbeafe;
+  box-shadow:0 0 0 3px rgba(28,58,95,.12);
+}
+.mode-icon{font-size:1.6rem;margin-bottom:.4rem;}
+.mode-title{font-weight:700;color:var(--navy);font-size:.95rem;}
+.mode-desc{font-size:.78rem;color:var(--gray);margin-top:.25rem;line-height:1.4;}
+
+/* Start button */
+.btn-start{
+  width:100%;padding:1rem;
+  background:linear-gradient(135deg,var(--navy),#2563a8);
+  color:white;border:none;border-radius:var(--radius);
+  font-size:1.05rem;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:var(--transition);
+  box-shadow:0 4px 14px rgba(28,58,95,.3);
+  margin-top:.2rem;
+}
+.btn-start:hover{background:linear-gradient(135deg,var(--teal),#0369a1);
+  box-shadow:0 6px 18px rgba(8,145,178,.35);transform:translateY(-1px);}
+.btn-start:active{transform:translateY(0);}
+
+.wrong-start-btn{
+  width:100%;padding:.65rem;background:var(--white);
+  border:2px solid var(--red);color:var(--red);
+  border-radius:var(--radius);font-size:.9rem;font-weight:700;
+  cursor:pointer;margin-top:.5rem;font-family:inherit;transition:var(--transition);
+  display:flex;align-items:center;justify-content:center;gap:.4rem;
+}
+.wrong-start-btn:hover{background:#fef2f2;}
+
+/* Random setup */
+.random-setup{
+  background:#f8faff;border:1.5px solid #bfdbfe;border-radius:var(--radius);
+  padding:1rem;margin-bottom:.8rem;display:none;
+}
+.random-setup.visible{display:block;}
+.rand-presets{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem;}
+.rand-preset{
+  padding:.35rem .75rem;border-radius:20px;border:1.5px solid var(--lgray);
+  background:var(--white);font-size:.82rem;cursor:pointer;font-family:inherit;
+  font-weight:600;color:var(--gray);transition:var(--transition);
+}
+.rand-preset.active,.rand-preset:hover{border-color:var(--teal);color:var(--teal);background:#eff6ff;}
+.rand-custom{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;flex-wrap:wrap;}
+.rand-custom input{
+  width:70px;padding:.35rem .5rem;border:1.5px solid var(--lgray);
+  border-radius:6px;font-size:.88rem;font-family:inherit;
+  text-align:center;color:var(--dark);
+}
+.rand-custom span{font-size:.82rem;color:var(--gray);}
+.rand-type-row{display:flex;gap:.4rem;flex-wrap:wrap;}
+.rand-type-btn{
+  flex:1;min-width:80px;padding:.4rem .5rem;border-radius:7px;
+  border:1.5px solid var(--lgray);background:var(--white);
+  font-size:.78rem;font-weight:600;color:var(--gray);
+  cursor:pointer;font-family:inherit;transition:var(--transition);text-align:center;
+}
+.rand-type-btn.active,.rand-type-btn:hover{border-color:var(--navy);color:var(--navy);background:#dbeafe;}
+
+/* ════════════════════════════════════════
+   APP SHELL
+   ════════════════════════════════════════ */
+#app{display:none;height:100vh;flex-direction:column;}
+
+header{
+  background:linear-gradient(90deg,var(--navy),#1a4f72);
+  color:white;padding:.55rem 1rem;
+  display:flex;align-items:center;gap:.75rem;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.hdr-home{
+  background:rgba(255,255,255,.12);border:none;color:white;
+  width:32px;height:32px;border-radius:8px;cursor:pointer;
+  font-size:1rem;display:flex;align-items:center;justify-content:center;
+  transition:var(--transition);flex-shrink:0;
+}
+.hdr-home:hover{background:rgba(255,255,255,.22);}
+.hdr-title{font-size:.95rem;font-weight:700;flex:1;letter-spacing:-.01em;}
+.hdr-timer{
+  font-size:1rem;font-weight:700;font-variant-numeric:tabular-nums;
+  background:rgba(255,255,255,.12);padding:.25rem .7rem;
+  border-radius:7px;min-width:76px;text-align:center;
+  border:1px solid rgba(255,255,255,.15);
+}
+.hdr-timer.warn{background:#dc2626;border-color:#dc2626;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.hdr-score{
+  font-size:.82rem;background:var(--teal);padding:.25rem .65rem;
+  border-radius:7px;white-space:nowrap;font-weight:600;
+}
+
+.progress-bar{height:3px;background:rgba(255,255,255,.15);flex-shrink:0;}
+.progress-fill{height:100%;background:var(--teal);transition:.4s;}
+
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* ════════════════════════════════════════
+   SIDEBAR
+   ════════════════════════════════════════ */
+aside{
+  width:230px;background:var(--white);
+  border-right:1px solid var(--lgray);
+  display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;
+}
+.sec-tabs{display:flex;border-bottom:1px solid var(--lgray);flex-shrink:0;}
+.sec-tab{
+  flex:1;padding:.6rem .3rem;text-align:center;cursor:pointer;
+  font-size:.78rem;font-weight:600;color:var(--gray);
+  border-bottom:3px solid transparent;transition:var(--transition);
+}
+.sec-tab.active{color:var(--navy);border-bottom-color:var(--teal);}
+.q-grid{padding:.6rem .7rem;overflow-y:auto;flex:1;}
+.q-grid-title{font-size:.7rem;color:var(--gray);text-transform:uppercase;
+  margin-bottom:.4rem;letter-spacing:.05em;font-weight:600;}
+.q-dots{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:.8rem;}
+.q-dot{
+  aspect-ratio:1;border-radius:4px;background:var(--lgray);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:.6rem;font-weight:700;color:var(--gray);
+  transition:var(--transition);border:none;
+}
+.q-dot:hover{background:#cbd5e1;transform:scale(1.1);}
+.q-dot.answered{background:#dbeafe;color:var(--navy);}
+.q-dot.correct{background:#dcfce7;color:var(--green);}
+.q-dot.wrong{background:#fee2e2;color:var(--red);}
+.q-dot.current{outline:2px solid var(--navy);outline-offset:1px;z-index:1;}
+.sidebar-stats{
+  padding:.65rem .8rem;border-top:1px solid var(--lgray);
+  font-size:.78rem;color:var(--gray);flex-shrink:0;
+}
+.stat-row{display:flex;justify-content:space-between;margin-bottom:.3rem;}
+.stat-val{font-weight:700;color:var(--dark);}
+
+/* ════════════════════════════════════════
+   MAIN QUESTION AREA
+   ════════════════════════════════════════ */
+main{flex:1;overflow-y:auto;padding:1.2rem;background:var(--bg);}
+
+.q-card{
+  background:var(--white);border-radius:var(--radius);
+  box-shadow:var(--shadow-md);overflow:hidden;
+  max-width:760px;margin:0 auto;
+}
+
+/* Question header bar */
+.q-header{
+  background:linear-gradient(135deg,var(--navy),#1a4f72);
+  color:white;padding:.85rem 1.1rem;
+  display:flex;align-items:center;gap:.7rem;
+}
+.q-num{
+  background:var(--teal);color:white;border-radius:7px;
+  padding:.2rem .6rem;font-weight:800;font-size:.85rem;white-space:nowrap;
+  letter-spacing:.02em;
+}
+.q-chapter{font-size:.75rem;color:#a0c4e8;flex:1;}
+
+/* Question body */
+.q-body{padding:1.2rem 1.2rem 1rem;}
+.q-text{
+  font-size:1.02rem;font-weight:600;color:var(--dark);
+  line-height:1.65;margin-bottom:1.1rem;
+}
+
+/* Options */
+.options{display:grid;gap:.5rem;}
+.opt-btn{
+  width:100%;text-align:left;padding:.75rem .95rem;
+  border-radius:var(--radius-sm);border:2px solid var(--lgray);
+  background:var(--white);cursor:pointer;
+  font-size:.95rem;color:var(--dark);
+  transition:var(--transition);font-family:inherit;line-height:1.45;
+  display:flex;align-items:flex-start;gap:.65rem;
+}
+.opt-btn:hover:not(:disabled){border-color:var(--teal);background:#f0f9ff;}
+.opt-btn.selected:not(.correct):not(.wrong){border-color:#94a3b8;background:#f8fafc;}
+.opt-btn.correct{
+  border-color:var(--green)!important;background:#f0fdf4!important;
+  color:var(--green);font-weight:700;
+}
+.opt-btn.wrong{
+  border-color:var(--red)!important;background:#fef2f2!important;
+  color:#b91c1c;text-decoration:line-through;
+}
+.opt-btn:disabled{cursor:default;}
+.opt-letter{
+  min-width:26px;height:26px;border-radius:6px;
+  background:var(--lgray);color:var(--gray);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.78rem;flex-shrink:0;margin-top:1px;
+  transition:var(--transition);
+}
+.opt-btn:hover:not(:disabled) .opt-letter{background:var(--teal);color:white;}
+.opt-btn.correct .opt-letter{background:var(--green);color:white;}
+.opt-btn.wrong .opt-letter{background:var(--red);color:white;}
+.opt-text{flex:1;}
+
+/* Explanation box */
+.expl-box{
+  margin-top:.9rem;padding:.85rem 1rem;
+  background:#fffbeb;border-left:4px solid var(--orange);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  font-size:.88rem;color:var(--dark);line-height:1.55;display:none;
+}
+.expl-box.show{display:block;}
+.expl-box::before{content:"💡 解析：";font-weight:700;color:var(--orange);}
+
+/* ════════════════════════════════════════
+   CALC QUESTION
+   ════════════════════════════════════════ */
+.calc-q-box{
+  background:#eff6ff;border:1.5px solid #bfdbfe;
+  border-radius:var(--radius-sm);padding:.9rem 1.1rem;
+  margin-bottom:.75rem;font-size:.96rem;font-weight:600;
+  color:var(--navy);line-height:1.55;
+}
+.given-box{
+  background:var(--teal);color:white;border-radius:var(--radius-sm);
+  padding:.55rem .9rem;margin-bottom:.75rem;font-size:.85rem;
+}
+.given-label{font-weight:700;margin-bottom:.15rem;font-size:.8rem;opacity:.85;}
+.work-area{
+  border:2px dashed #cbd5e1;border-radius:var(--radius-sm);
+  min-height:160px;padding:.9rem;margin:.75rem 0;position:relative;
+  background:#fafbfd;
+}
+.work-label{
+  position:absolute;top:.7rem;left:.8rem;
+  font-size:.8rem;color:#cbd5e1;font-weight:600;pointer-events:none;
+}
+.work-area textarea{
+  width:100%;min-height:120px;border:none;background:transparent;
+  resize:none;font-family:inherit;font-size:.9rem;color:var(--dark);
+  padding-top:1.6rem;outline:none;
+}
+.reveal-btn{
+  padding:.6rem 1.3rem;background:var(--navy);color:white;border:none;
+  border-radius:var(--radius-sm);cursor:pointer;font-size:.92rem;
+  font-weight:600;font-family:inherit;transition:var(--transition);
+}
+.reveal-btn:hover{background:var(--teal);}
+.solution-box{
+  margin-top:.9rem;border:1.5px solid var(--lgray);
+  border-radius:var(--radius-sm);overflow:hidden;display:none;
+}
+.solution-box.show{display:block;}
+.sol-header{background:var(--navy);color:white;padding:.55rem 1rem;font-weight:700;font-size:.88rem;}
+.steps{padding:.75rem 1rem;}
+.step-row{display:flex;gap:.65rem;margin-bottom:.6rem;align-items:flex-start;}
+.step-num{
+  background:var(--orange);color:white;border-radius:6px;
+  min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.78rem;flex-shrink:0;margin-top:2px;
+}
+.step-text{font-size:.88rem;color:var(--dark);line-height:1.5;padding-top:2px;}
+.ans-banner{
+  background:var(--green);color:white;padding:.6rem 1rem;
+  font-weight:700;font-size:.9rem;
+}
+.calc-self-check{
+  display:flex;align-items:center;gap:.6rem;margin-top:.75rem;
+  padding:.65rem .9rem;background:#f0fdf4;border-radius:var(--radius-sm);
+  font-size:.88rem;color:var(--dark);
+}
+.calc-self-check input{width:18px;height:18px;cursor:pointer;accent-color:var(--green);}
+
+/* ════════════════════════════════════════
+   NAV BUTTONS
+   ════════════════════════════════════════ */
+.q-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  max-width:760px;margin:.9rem auto 0;gap:.5rem;
+}
+.nav-btn{
+  padding:.6rem 1.1rem;border-radius:var(--radius-sm);
+  border:2px solid var(--lgray);background:var(--white);
+  cursor:pointer;font-size:.88rem;font-weight:600;
+  color:var(--dark);font-family:inherit;transition:var(--transition);
+}
+.nav-btn:hover:not(:disabled){border-color:var(--navy);color:var(--navy);background:#f0f9ff;}
+.nav-btn:disabled{opacity:.35;cursor:default;}
+.nav-btn.primary{background:var(--navy);color:white;border-color:var(--navy);}
+.nav-btn.primary:hover{background:var(--teal);border-color:var(--teal);}
+.q-counter{font-size:.85rem;color:var(--gray);text-align:center;flex:1;}
+
+.exam-submit-bar{
+  background:var(--navy);color:white;padding:.75rem 1.2rem;
+  border-radius:var(--radius);display:flex;align-items:center;
+  justify-content:space-between;max-width:760px;margin:1rem auto 0;
+  box-shadow:var(--shadow-sm);
+}
+.submit-btn{
+  padding:.5rem 1.3rem;background:var(--orange);color:white;border:none;
+  border-radius:var(--radius-sm);cursor:pointer;font-size:.9rem;
+  font-weight:700;font-family:inherit;transition:var(--transition);
+}
+.submit-btn:hover{background:#c75f10;}
+
+.exam-note{
+  margin-top:.9rem;padding:.75rem;background:var(--bg);
+  border-radius:var(--radius-sm);font-size:.85rem;color:var(--gray);text-align:center;
+}
+
+/* ════════════════════════════════════════
+   RESULTS
+   ════════════════════════════════════════ */
+#results{display:none;min-height:100vh;background:var(--bg);padding:1.5rem;}
+.res-hero{
+  background:linear-gradient(145deg,var(--navy),#1a5f7a);color:white;
+  border-radius:16px;padding:2rem 1.5rem;text-align:center;
+  margin-bottom:1.2rem;max-width:680px;margin-left:auto;margin-right:auto;
+  box-shadow:var(--shadow-lg);
+}
+.res-score{font-size:4rem;font-weight:900;color:var(--teal);line-height:1;}
+.res-total{font-size:.92rem;color:#a0c4e8;margin-bottom:.8rem;}
+.res-grade{font-size:1.3rem;font-weight:700;margin:.5rem 0;}
+.res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-top:.9rem;}
+.res-stat{background:rgba(255,255,255,.1);border-radius:10px;padding:.75rem;}
+.res-stat-n{font-size:1.5rem;font-weight:700;}
+.res-stat-l{font-size:.75rem;color:#a0c4e8;}
+.res-card{
+  background:var(--white);border-radius:var(--radius);padding:1.3rem;
+  max-width:680px;margin:0 auto .9rem;box-shadow:var(--shadow-sm);
+}
+.res-card h3{color:var(--navy);margin-bottom:.8rem;font-size:.95rem;font-weight:700;}
+.review-item{
+  padding:.55rem 0;border-bottom:1px solid var(--lgray);
+  display:flex;align-items:flex-start;gap:.6rem;font-size:.85rem;
+}
+.review-item:last-child{border-bottom:none;}
+.ri-icon{font-size:.95rem;flex-shrink:0;margin-top:2px;}
+.ri-q{flex:1;}
+.ri-q b{display:block;color:var(--dark);margin-bottom:.15rem;font-size:.88rem;}
+.ri-q small{color:var(--gray);}
+.btn-retry{
+  padding:.75rem 2rem;background:var(--teal);color:white;border:none;
+  border-radius:var(--radius);font-size:.95rem;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:var(--transition);
+  box-shadow:0 4px 12px rgba(8,145,178,.3);
+}
+.btn-retry:hover{background:#0369a1;}
+.calc-review-item{padding:.75rem 0;border-bottom:1px solid var(--lgray);font-size:.85rem;}
+.calc-review-item:last-child{border-bottom:none;}
+.cri-q{font-weight:600;color:var(--dark);margin-bottom:.25rem;}
+.cri-ans{color:var(--green);font-size:.82rem;}
+.section-switch-btn{
+  padding:.45rem .9rem;background:var(--bg);border:2px solid var(--navy);
+  color:var(--navy);border-radius:var(--radius-sm);cursor:pointer;
+  font-size:.82rem;font-weight:600;font-family:inherit;transition:var(--transition);
+}
+.section-switch-btn:hover,.section-switch-btn.active{background:var(--navy);color:white;}
+
+/* Resume bar */
+#resume-bar{
+  display:none;
+  background:linear-gradient(135deg,#0891B2,#1C3A5F);color:white;
+  padding:.75rem 1.1rem;border-radius:var(--radius);
+  margin:1rem auto;max-width:620px;
+  align-items:center;gap:.75rem;flex-wrap:wrap;font-size:.88rem;
+  box-shadow:var(--shadow-md);
+}
+#resume-info{flex:1;min-width:180px;}
+#resume-btn{
+  background:var(--orange);color:white;border:none;padding:.4rem .85rem;
+  border-radius:6px;cursor:pointer;font-weight:600;font-size:.83rem;
+  font-family:inherit;transition:var(--transition);
+}
+#resume-btn:hover{background:#c75f10;}
+#clear-btn-top{
+  background:transparent;color:rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,.35);border-radius:6px;
+  padding:.3rem .6rem;cursor:pointer;font-size:.75rem;font-family:inherit;
+  transition:var(--transition);
+}
+#clear-btn-top:hover{background:rgba(255,255,255,.12);}
+
+/* Notification */
+.notification{
+  position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--dark);color:white;padding:.65rem 1.4rem;
+  border-radius:30px;font-size:.88rem;font-weight:600;
+  opacity:0;transition:.3s;pointer-events:none;z-index:9999;white-space:nowrap;
+  box-shadow:var(--shadow-md);
+}
+.notification.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Wrong answer panel */
+.wrong-panel{
+  position:fixed;inset:0;z-index:1000;display:none;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(2px);
+}
+.wrong-panel.open{display:flex;justify-content:flex-end;}
+.wrong-drawer{
+  background:white;width:min(500px,100vw);height:100vh;overflow-y:auto;
+  box-shadow:-6px 0 30px rgba(0,0,0,.25);display:flex;flex-direction:column;
+  animation:slideIn .2s ease;
+}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.wrong-header{
+  background:linear-gradient(135deg,var(--navy),#1a4f72);color:white;
+  padding:.9rem 1.1rem;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:1;
+}
+.wrong-header h2{font-size:1rem;margin:0;}
+.wrong-close{
+  background:rgba(255,255,255,.12);border:none;color:white;
+  font-size:1.2rem;cursor:pointer;line-height:1;
+  width:32px;height:32px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;transition:var(--transition);
+}
+.wrong-close:hover{background:rgba(255,255,255,.22);}
+.wrong-toolbar{
+  padding:.7rem .9rem;border-bottom:1px solid var(--lgray);
+  display:flex;gap:.5rem;flex-wrap:wrap;
+}
+.wrong-list{flex:1;padding:.75rem .9rem;}
+.wrong-card{border:1.5px solid var(--lgray);border-radius:var(--radius);margin-bottom:.75rem;overflow:hidden;}
+.wrong-card-head{
+  background:var(--bg);padding:.5rem .85rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.wrong-badge{
+  font-size:.7rem;background:#FEE2E2;color:#DC2626;
+  padding:.12rem .45rem;border-radius:20px;font-weight:700;
+}
+.wrong-card-body{padding:.65rem .85rem;font-size:.85rem;}
+.wrong-q{font-weight:600;color:var(--dark);margin-bottom:.35rem;line-height:1.45;}
+.wrong-ans-row{display:flex;gap:.45rem;margin-top:.35rem;flex-wrap:wrap;}
+.wrong-my{background:#FEE2E2;color:#DC2626;padding:.18rem .55rem;border-radius:6px;font-size:.78rem;}
+.wrong-correct{background:#DCFCE7;color:#059669;padding:.18rem .55rem;border-radius:6px;font-size:.78rem;}
+.wrong-expl{
+  background:var(--bg);border-radius:6px;padding:.4rem .6rem;
+  font-size:.78rem;color:var(--gray);margin-top:.4rem;line-height:1.4;
+}
+.wrong-del{background:none;border:none;color:var(--gray);cursor:pointer;font-size:.78rem;transition:var(--transition);}
+.wrong-del:hover{color:#DC2626;}
+.wrong-empty{text-align:center;padding:3rem 1rem;color:var(--gray);}
+.wrong-empty .big{font-size:2.2rem;margin-bottom:.5rem;}
+.wrong-count-badge{
+  background:#DC2626;color:white;border-radius:12px;font-size:.68rem;
+  font-weight:700;padding:.1rem .4rem;margin-left:.3rem;
+  display:inline-block;min-width:17px;text-align:center;
+}
+.wrong-btn-sidebar{
+  display:block;width:100%;margin-top:.4rem;padding:.4rem;
+  background:linear-gradient(135deg,#DC2626,#b91c1c);color:white;border:none;
+  border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:600;font-family:inherit;
+}
+.wrong-btn-sidebar:hover{background:#b91c1c;}
+
+/* ════════════════════════════════════════
+   MOBILE — max-width 768px
+   ════════════════════════════════════════ */
+#grid-toggle{display:none;}
+
+@media(max-width:768px){
+  /* Start screen */
+  #start{padding:1rem .85rem;}
+  .start-card{padding:1.4rem 1.1rem 1.1rem;border-radius:16px;}
+  .start-logo{font-size:1.85rem;}
+  .start-sub{font-size:.88rem;margin-bottom:.9rem;}
+  .start-info{grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.9rem;}
+  .info-box{padding:.65rem .75rem;}
+  .info-box b{font-size:.8rem;}
+  .info-box span{font-size:.72rem;}
+  .mode-grid{grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.65rem;}
+  .mode-btn{padding:.8rem .7rem;}
+  .mode-icon{font-size:1.4rem;margin-bottom:.25rem;}
+  .mode-title{font-size:.85rem;}
+  .mode-desc{font-size:.72rem;}
+  .btn-start{padding:.9rem;font-size:.97rem;}
+  .wrong-start-btn{font-size:.85rem;padding:.6rem;}
+  .rand-preset{font-size:.78rem;padding:.3rem .6rem;}
+
+  /* Header */
+  header{padding:.45rem .75rem;gap:.5rem;}
+  .hdr-title{font-size:.82rem;}
+  .hdr-timer{font-size:.9rem;padding:.22rem .55rem;min-width:66px;}
+  .hdr-score{font-size:.75rem;padding:.22rem .55rem;}
+  #mode-badge{display:none;}
+
+  /* Layout: sidebar → top bar */
+  .layout{flex-direction:column;overflow:visible;}
+  aside{
+    width:100%;border-right:none;
+    border-bottom:2px solid var(--lgray);max-height:none;flex-direction:column;
+  }
+  .sec-tab{padding:.55rem .3rem;font-size:.8rem;}
+  .q-grid{display:none;}
+  .q-grid.mobile-open{display:block;max-height:160px;overflow-y:auto;}
+  #grid-toggle{
+    display:block!important;width:100%;padding:.32rem;
+    background:var(--bg);border:none;border-bottom:1px solid var(--lgray);
+    color:var(--gray);font-size:.78rem;cursor:pointer;font-family:inherit;
+  }
+  .sidebar-stats{
+    display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;
+    padding:.45rem .75rem;
+  }
+  .stat-row{margin-bottom:0;font-size:.75rem;}
+  .stat-val{font-size:.82rem;}
+
+  /* Main */
+  main{padding:.7rem;}
+
+  /* Question card */
+  .q-card{border-radius:10px;}
+  .q-header{padding:.7rem .85rem;gap:.55rem;flex-wrap:wrap;}
+  .q-num{font-size:.8rem;padding:.2rem .5rem;}
+  .q-chapter{font-size:.72rem;}
+  .q-body{padding:.9rem .85rem .8rem;}
+  .q-text{font-size:.93rem;line-height:1.6;margin-bottom:.9rem;}
+  .options{gap:.42rem;}
+  .opt-btn{font-size:.88rem;padding:.65rem .8rem;border-radius:7px;gap:.55rem;}
+  .opt-letter{min-width:24px;height:24px;font-size:.74rem;border-radius:5px;}
+  .expl-box{font-size:.83rem;padding:.7rem .8rem;margin-top:.7rem;}
+
+  /* Calc */
+  .calc-q-box{font-size:.9rem;padding:.8rem;}
+  .given-box{font-size:.8rem;padding:.5rem .8rem;}
+  .work-area{min-height:120px;padding:.65rem;}
+  .work-area textarea{min-height:90px;font-size:.86rem;}
+  .reveal-btn{padding:.5rem .95rem;font-size:.86rem;}
+  .step-text{font-size:.83rem;}
+  .step-num{min-width:22px;height:22px;font-size:.75rem;}
+  .ans-banner{font-size:.85rem;padding:.5rem .8rem;}
+  .calc-self-check{font-size:.83rem;padding:.6rem .8rem;}
+
+  /* Nav */
+  .q-nav{flex-wrap:nowrap;gap:.4rem;margin-top:.7rem;}
+  .nav-btn{font-size:.82rem;padding:.5rem .65rem;}
+  .q-counter{font-size:.78rem;}
+
+  /* Results */
+  #results{padding:.85rem;}
+  .res-hero{padding:1.3rem .9rem;border-radius:14px;margin-bottom:.9rem;}
+  .res-score{font-size:2.8rem;}
+  .res-total{font-size:.82rem;}
+  .res-grade{font-size:1.1rem;}
+  .res-grid{grid-template-columns:1fr 1fr 1fr;gap:.45rem;}
+  .res-stat{padding:.55rem .35rem;}
+  .res-stat-n{font-size:1.1rem;}
+  .res-stat-l{font-size:.65rem;}
+  .res-card{padding:.9rem;border-radius:10px;margin-bottom:.7rem;}
+  .res-card h3{font-size:.88rem;margin-bottom:.7rem;}
+  .review-item{font-size:.8rem;}
+  .ri-q b{font-size:.82rem;}
+  .calc-review-item{font-size:.8rem;}
+  .btn-retry{padding:.65rem 1.4rem;font-size:.88rem;}
+
+  /* Wrong panel */
+  .wrong-drawer{width:100vw;}
+  .rand-presets{gap:.3rem;}
+  .wrong-toolbar{padding:.55rem .75rem;gap:.4rem;}
+}
+
+@media(max-width:380px){
+  .start-logo{font-size:1.6rem;}
+  .start-info{grid-template-columns:1fr;}
+  .mode-grid{grid-template-columns:1fr;}
+  .q-text{font-size:.86rem;}
+  .opt-btn{font-size:.83rem;padding:.6rem .65rem;}
+  .res-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="start">
+  <div class="start-card">
+    <div class="start-logo">CQT 綜合模擬考卷</div>
+    <div class="start-sub">品管技術師 全科模擬測驗 — 互動版</div>
+    <div class="start-info">
+      <div class="info-box"><b>📝 選擇題</b><span>Q1～Q460（計算題除外），共390題，每題1分</span></div>
+      <div class="info-box"><b>🧮 計算題</b><span>Q71～Q100 & Q261～Q500，共110題，每題2分</span></div>
+      <div class="info-box"><b>🎯 總分</b><span>610分（選390分＋計算220分）</span></div>
+      <div class="info-box"><b>⏱ 建議時間</b><span>150分鐘（可自行計時）</span></div>
+    </div>
+    <div class="mode-label">選擇作答模式：</div>
+    <div class="mode-grid">
+      <button class="mode-btn selected" onclick="selectMode('practice',this);hideRandSetup()">
+        <div class="mode-icon">📚</div>
+        <div class="mode-title">練習模式</div>
+        <div class="mode-desc">每題作答後立即顯示正解與解析，邊做邊學</div>
+      </button>
+      <button class="mode-btn" onclick="selectMode('random',this);showRandSetup()">
+        <div class="mode-icon">🎲</div>
+        <div class="mode-title">隨機測驗</div>
+        <div class="mode-desc">自選題數，隨機抽題挑戰</div>
+      </button>
+    </div>
+    <!-- Random setup panel -->
+    <div class="random-setup" id="rand-setup">
+      <div style="font-weight:700;color:var(--navy);margin-bottom:.5rem;font-size:.92rem;">📌 抽題設定</div>
+      <div style="font-size:.82rem;color:var(--gray);margin-bottom:.5rem;">快速選題數：</div>
+      <div class="rand-presets" id="rand-presets">
+        <button class="rand-preset active" onclick="setRandCount(10,this)">10題</button>
+        <button class="rand-preset" onclick="setRandCount(20,this)">20題</button>
+        <button class="rand-preset" onclick="setRandCount(30,this)">30題</button>
+        <button class="rand-preset" onclick="setRandCount(50,this)">50題</button>
+        <button class="rand-preset" onclick="setRandCount(100,this)">100題</button>
+      </div>
+      <div class="rand-custom">
+        <span style="font-size:.85rem;color:var(--gray);">自訂：</span>
+        <input type="number" id="rand-input" min="1" max="500" value="10"
+          onchange="setRandCountCustom(this.value)" oninput="setRandCountCustom(this.value)">
+        <span style="font-size:.82rem;color:var(--gray);">題（最多500）</span>
+      </div>
+      <div class="rand-type-row">
+        <button class="rand-type-btn active" id="rtype-all" onclick="setRandType('all',this)">📚 全部混合</button>
+        <button class="rand-type-btn" id="rtype-mcq" onclick="setRandType('mcq',this)">📝 僅選擇題</button>
+        <button class="rand-type-btn" id="rtype-calc" onclick="setRandType('calc',this)">🧮 僅計算題</button>
+      </div>
+    </div>
+    <button class="btn-start" onclick="startExam()">▶ 開始作答</button>
+    <button class="wrong-start-btn" onclick="openWrongPanel()">❌ 錯題本 <span id="wrong-count-start" class="wrong-count-badge" style="display:none">0</span></button>
+  </div>
+</div>
+
+<!-- EXAM APP -->
+<div id="app" style="display:flex;">
+  <header>
+    <button class="hdr-home" onclick="goHome()" title="返回首頁">⌂</button>
+    <div class="hdr-title">CQT 綜合模擬考卷</div>
+    <div id="mode-badge" style="font-size:.78rem;background:rgba(255,255,255,.15);padding:.2rem .6rem;border-radius:6px;"></div>
+    <div class="hdr-timer" id="timer">00:00</div>
+    <div class="hdr-score" id="score-badge">0 / 230 答</div>
+  </header>
+  <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+  <div class="layout">
+    <aside>
+      <div class="sec-tabs">
+        <div class="sec-tab active" id="tab-mcq" onclick="switchSection('mcq')">選擇題<br><small id="mcq-tab-count">0/230</small></div>
+        <div class="sec-tab" id="tab-calc" onclick="switchSection('calc')">計算題<br><small id="calc-tab-count">0/30</small></div>
+      </div>
+      <div class="q-grid">
+        <div class="q-grid-title">選擇題</div>
+        <div class="q-dots" id="dots-mcq"></div>
+        <div class="q-grid-title">計算題</div>
+        <div class="q-dots" id="dots-calc"></div>
+      </div>
+      <div class="sidebar-stats">
+        <div class="stat-row"><span>✅ 答對</span><span class="stat-val" id="stat-correct">0</span></div>
+        <div class="stat-row"><span>❌ 答錯</span><span class="stat-val" id="stat-wrong">0</span></div>
+        <div class="stat-row"><span>🧮 計算（自評）</span><span class="stat-val" id="stat-calc">0/30</span></div>
+        <div style="margin-top:.5rem;">
+          <button class="submit-btn" style="width:100%;border-radius:8px;padding:.5rem;" onclick="showResults()">查看成績 →</button>
+        </div>
+      </div>
+    
+    <button class="wrong-btn-sidebar" onclick="openWrongPanel()">❌ 錯題本 <span id="wrong-count-sidebar" class="wrong-count-badge" style="display:none">0</span></button>
+    <button class="save-btn-sidebar" onclick="saveProgress(); showNotification('✓ 進度已儲存')">💾 儲存進度</button>
+    <button class="clear-btn-sidebar" onclick="if(confirm('確定要清除所有進度記錄？'))clearProgress()">🗑️ 清除紀錄</button>
+
+  </aside>
+    <main id="content"></main>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results"></div>
+
+<script>
+const MCQ = [{"n": 1, "q": "根據 Juran 品質三部曲，下列哪項「不」屬於其中？", "opts": ["A. 品質規劃", "B. 品質改善", "C. 品質稽核", "D. 品質管制"], "ans": "C", "expl": "朱蘭三部曲=規劃+管制+改善，「稽核」不屬其中。"}, {"n": 2, "q": "ISO 9001:2015 共有幾個條款（Clauses）？", "opts": ["A. 8", "B. 10", "C. 12", "D. 14"], "ans": "B", "expl": "ISO 9001:2015 共10個條款（1~3為總則，4~10為要求）。"}, {"n": 3, "q": "品質成本中，「員工品質訓練」屬於哪類成本？", "opts": ["A. 鑑定成本", "B. 內部失敗成本", "C. 預防成本", "D. 外部失敗成本"], "ans": "C", "expl": "預防成本含訓練、設計審查；鑑定成本含檢驗；失敗成本含不良品。"}, {"n": 4, "q": "PDCA 循環中，「A（Act）」代表？", "opts": ["A. 分析問題根因", "B. 標準化並持續推廣最佳做法", "C. 比較實際與計畫差異", "D. 收集現場數據"], "ans": "B", "expl": "Plan=計畫，Do=執行，Check=查核，Act=標準化行動/持續改善。"}, {"n": 5, "q": "當顧客「感知」遠低於「期望」時，顧客狀態為？", "opts": ["A. 極度滿意", "B. 滿意", "C. 不滿意", "D. 中性"], "ans": "C", "expl": "滿意度=感知−期望；感知<期望→不滿意，越負越不滿意。"}, {"n": 6, "q": "下列哪項屬於「外部失敗成本」？", "opts": ["A. 製程重工", "B. 進料退料", "C. 客戶保固維修", "D. 成品報廢"], "ans": "C", "expl": "外部失敗=出廠後：召回、保固、退貨；內部失敗=出廠前：重工、報廢。"}, {"n": 7, "q": "TQM（全面品質管理）的顧客概念正確描述是？", "opts": ["A. 僅指最終消費者", "B. 內外部顧客均需滿足", "C. 以股東利益為優先", "D. 只考慮大客戶"], "ans": "B", "expl": "TQM顧客含內部顧客（下一製程）與外部顧客（終端使用者）。"}, {"n": 8, "q": "田口品質損失函數 L(y)=k(y−m)² 中，k=A/Δ²，其中 A 代表？", "opts": ["A. 規格容差（Tolerance）", "B. 功能界限", "C. 損壞或修理費用", "D. 製程標準差"], "ans": "C", "expl": "k=A/Δ²：A=修理費用（超過功能界限的損失），Δ=功能界限（容許偏差）。"}, {"n": 9, "q": "ISO 9001:2015 相比 2008 版，新增的重要要求是？", "opts": ["A. 品質手冊（強制）", "B. 風險思維與情境分析", "C. 管理代表（強制）", "D. 糾正措施報告格式"], "ans": "B", "expl": "2015版新增：風險思維（6.1）、情境分析（4.1/4.2）；取消強制品質手冊與管理代表。"}, {"n": 10, "q": "QFD「品質屋」中，「屋頂」代表的是？", "opts": ["A. 顧客需求（Whats）", "B. 工程特性相互關係矩陣", "C. 競爭者比較", "D. 技術目標值"], "ans": "B", "expl": "品質屋屋頂=工程特性（Hows）之間的相關矩陣，顯示技術特性間的取捨關係。"}, {"n": 11, "q": "六標準差（6σ）允許製程有1.5σ偏移時，其長期不良率為？", "opts": ["A. 3.4 PPM", "B. 6.8 PPM", "C. 0.34 PPM", "D. 233 PPM"], "ans": "A", "expl": "6σ含1.5σ偏移時不良率=3.4 PPM，這是六標準差的標準定義。"}, {"n": 12, "q": "IATF 16949 主要適用於哪個產業？", "opts": ["A. 航太製造業", "B. 汽車零組件供應鏈", "C. 醫療器材業", "D. 食品加工業"], "ans": "B", "expl": "IATF 16949 是汽車產業品質管理系統標準，以 ISO 9001 為基礎。"}, {"n": 13, "q": "FMEA 中，RPN（風險優先數）= ？", "opts": ["A. S + O + D", "B. S × O × D", "C. S × O", "D. (S+O+D)/3"], "ans": "B", "expl": "RPN=嚴重度(S)×發生頻度(O)×難檢度(D)，用於優先排序失效模式。"}, {"n": 14, "q": "5S 活動中，「整頓（Seiton）」的正確定義是？", "opts": ["A. 清除不需要的物品", "B. 物品定位、定量、標示清楚", "C. 維持清潔標準", "D. 養成良好工作習慣"], "ans": "B", "expl": "整理=去除不要物；整頓=定位定量；清掃=保持清潔；清潔=維持整頓清掃；素養=習慣養成。"}, {"n": 15, "q": "ISO 9001:2015 條款 6（規劃）的主要內容包含？", "opts": ["A. 人員訓練與能力", "B. 風險管理、品質目標、變更規劃", "C. 內部稽核程序", "D. 顧客滿意度調查"], "ans": "B", "expl": "條款6=規劃：6.1=風險機會，6.2=品質目標，6.3=變更規劃。條款7=支援（含人員訓練）。"}, {"n": 16, "q": "8D 問題解決法中，「永久矯正措施（PCA）」屬於哪一步？", "opts": ["A. D3：臨時圍堵措施", "B. D4：根本原因分析", "C. D5：永久矯正措施選擇", "D. D6：實施永久矯正措施"], "ans": "C", "expl": "D5=選擇並確認永久矯正措施（PCA），D6=實施PCA並驗效，需區分選擇(D5)與實施(D6)。"}, {"n": 17, "q": "「第二方稽核」是指？", "opts": ["A. 公司內部自我稽核", "B. 顧客或關係方對供應商進行稽核", "C. 第三方認證機構稽核", "D. 政府法規主管機關稽核"], "ans": "B", "expl": "第一方=內部稽核，第二方=顧客稽核供應商，第三方=認證機構（如BSI、SGS）。"}, {"n": 18, "q": "防錯法（Poka-Yoke）中「控制型（Control Type）」的特點是？", "opts": ["A. 發出警報提醒操作者", "B. 記錄錯誤供事後分析", "C. 完全阻止錯誤的發生", "D. 自動修正錯誤"], "ans": "C", "expl": "控制型=阻止錯誤繼續進行（強制性防錯）；警告型=發出警報但不阻止。"}, {"n": 19, "q": "APQP（先進產品品質規劃）共分為幾個階段？", "opts": ["A. 3", "B. 4", "C. 5", "D. 6"], "ans": "C", "expl": "APQP五階段：1.規劃定義→2.產品設計開發→3.製程設計開發→4.產品製程驗證→5.回饋評估改善。"}, {"n": 20, "q": "QMS 文件層次由高至低，正確順序為？", "opts": ["A. 程序書→品質手冊→作業指導書→表單", "B. 品質手冊→程序書→作業指導書→表單", "C. 品質手冊→作業指導書→程序書→表單", "D. 品質手冊→程序書→表單→作業指導書"], "ans": "B", "expl": "Level 1=品質手冊(Why)，Level 2=程序書(What/Who)，Level 3=作業指導書(How)，Level 4=表單(Record)。"}, {"n": 21, "q": "六標準差 DMAIC 中，「M（Measure）」階段的主要工作是？", "opts": ["A. 定義問題與範圍", "B. 量測現況基準與製程能力", "C. 分析根本原因", "D. 實施改善方案"], "ans": "B", "expl": "D=定義，M=量測現況基準（含MSA、基準Cpk），A=分析根因，I=改善，C=管制維持。"}, {"n": 22, "q": "ISO 14001 是哪類管理系統標準？", "opts": ["A. 品質管理系統", "B. 環境管理系統", "C. 職業安全衛生管理", "D. 資訊安全管理"], "ans": "B", "expl": "ISO 14001=環境管理；ISO 45001=職業安全衛生；ISO 27001=資訊安全；ISO 9001=品質管理。"}, {"n": 23, "q": "PPAP（生產零件核准程序）是以下哪個標準的核心工具？", "opts": ["A. ISO 9001", "B. AS9100（航太）", "C. IATF 16949（汽車）", "D. ISO 13485（醫療）"], "ans": "C", "expl": "PPAP是IATF 16949 / AIAG的核心交付物，用於供應商新零件的品質確認。"}, {"n": 24, "q": "柏拉圖（Pareto Chart）所依據的核心原則是？", "opts": ["A. 所有問題同等重要", "B. 80%的問題由20%的原因造成", "C. 必須消除所有缺陷類型", "D. 問題依時間序列排列"], "ans": "B", "expl": "80/20法則（Vital Few vs. Trivial Many）：少數重要原因造成大多數問題。"}, {"n": 25, "q": "魚骨圖「6M」中，下列哪項「不」在其中？", "opts": ["A. Manpower（人）", "B. Machine（機）", "C. Market（市場）", "D. Mother Nature（環境）"], "ans": "C", "expl": "6M=Man/Machine/Material/Method/Measurement/Mother Nature；Market(市場)不屬於6M。"}, {"n": 26, "q": "散佈圖相關係數 r = +0.92 代表？", "opts": ["A. 強負相關", "B. 弱正相關", "C. 強正相關", "D. 無線性相關"], "ans": "C", "expl": "|r|>0.8通常為強相關；r>0=正相關；r<0=負相關；|r|<0.3=弱或無線性相關。"}, {"n": 27, "q": "直方圖的組距（Class Width）計算公式為？", "opts": ["A. 全距 / 組數", "B. 組數 / 全距", "C. √（資料數n）", "D. 全距 × 組數"], "ans": "A", "expl": "組距 = 全距（Max-Min）/ 組數；組數通常取√n或依Sturges法則 log₂n+1。"}, {"n": 28, "q": "X̄-R 管制圖中，X̄ 圖的上管制界限（UCL）公式為？", "opts": ["A. X̄̄ + 3σ", "B. X̄̄ + A₂R̄", "C. X̄̄ + D₄R̄", "D. R̄ + 3σ_R"], "ans": "B", "expl": "UCL_X̄ = X̄̄ + A₂R̄；A₂為依子群大小n查表的係數（如n=5，A₂=0.577）。"}, {"n": 29, "q": "查檢表（Check Sheet）的主要功能是？", "opts": ["A. 分析不良原因", "B. 系統化地收集與記錄資料", "C. 排列問題的優先順序", "D. 展示各要因間的關係"], "ans": "B", "expl": "查檢表是資料收集工具，用於有系統地記錄觀測數據，不做分析。"}, {"n": 30, "q": "層別法（Stratification）最常搭配哪個工具以避免假相關？", "opts": ["A. FMEA", "B. 散佈圖", "C. 品質屋", "D. 柏拉圖"], "ans": "B", "expl": "散佈圖中若混合不同來源（機台、班別）資料可能出現假相關；層別後分組分析才準確。"}, {"n": 31, "q": "Western Electric 法則中，「Rule 4：連續6點遞增或遞減」代表？", "opts": ["A. 製程超出管制界限", "B. 製程有漂移（趨勢）的跡象", "C. 製程呈循環模式", "D. 資料呈雙峰分布"], "ans": "B", "expl": "連續6點（或以上）單調遞增或遞減=趨勢信號，可能是磨耗、老化、原料批次變化。"}, {"n": 32, "q": "柏拉圖中，累積百分比折線達 80% 時，其左側項目稱為？", "opts": ["A. 瑣事的多數（Trivial Many）", "B. 重要的少數（Vital Few）", "C. 所有問題類別", "D. 中位數附近的問題"], "ans": "B", "expl": "80%累積以內的項目=「重要的少數」（Vital Few），是改善優先目標。"}, {"n": 33, "q": "直方圖呈現「雙峰（Bimodal）」分布，最可能的原因是？", "opts": ["A. 量測系統誤差", "B. 兩種不同製程或來源的資料混合", "C. 規格設定太寬", "D. 樣本數不足"], "ans": "B", "expl": "雙峰通常代表兩個不同群體（如不同班別、供應商）混合，應使用層別法分開分析。"}, {"n": 34, "q": "新QC七手法中，「親和圖（Affinity Diagram）」的用途是？", "opts": ["A. 整理歸納大量模糊意見或構想，找出共同主題", "B. 分析複雜問題的多因果關係", "C. 規劃專案執行時程", "D. 評估多方案的優先順序"], "ans": "A", "expl": "親和圖=KJ法，將發散的語言資料歸類整合；關聯圖用於分析複雜因果關係。"}, {"n": 35, "q": "管制圖的「管制界限」與「規格界限」的關係，正確描述是？", "opts": ["A. 管制界限等於規格界限", "B. 管制界限由製程統計計算；規格界限由顧客或設計決定", "C. 規格界限通常比管制界限更窄", "D. 兩者可互相替換使用"], "ans": "B", "expl": "管制界限=製程自然變異邊界（±3σ）；規格界限=顧客要求。二者不可混用，這是SPC最重要概念之一。"}, {"n": 36, "q": "ANSI Z1.4 正常檢驗轉換為加嚴檢驗（Tightened）的條件是？", "opts": ["A. 連續5批中有2批被拒收", "B. 連續10批全數允收", "C. AQL超過規定標準", "D. 批量超過規定值"], "ans": "A", "expl": "正常→加嚴：近5批中有2批拒收；加嚴→正常：連續5批全數允收；加嚴→停檢：連續5批拒收。"}, {"n": 37, "q": "OC 曲線（Operating Characteristic Curve）的縱軸代表？", "opts": ["A. 批不合格率 p", "B. 允收機率 Pa", "C. 樣本數 n", "D. 拒收機率 (1-Pa)"], "ans": "B", "expl": "OC曲線：橫軸=批不合格率p，縱軸=允收機率Pa；完整描述抽樣計畫的辨別力。"}, {"n": 38, "q": "雙次抽樣（Double Sampling）的主要優點是？", "opts": ["A. 計算比單次更簡單", "B. 決策比單次更快速", "C. 品質明顯好或差時，ASN通常少於單次", "D. 允收數一定較大"], "ans": "C", "expl": "雙次抽樣對品質極好或極差的批，ASN通常比單次少；品質中等時ASN可能更多。"}, {"n": 39, "q": "「生產者風險（α，Producer's Risk）」的定義是？", "opts": ["A. 劣批被允收的機率", "B. 良批被拒收的機率", "C. 抽樣過程的統計誤差", "D. 檢驗員的判斷錯誤率"], "ans": "B", "expl": "α=Type I Error=良批被誤判拒收（冤枉好批）；β=Type II Error=劣批被誤判允收。"}, {"n": 40, "q": "「平均出廠品質上限（AOQL）」代表？", "opts": ["A. 允收品質界限", "B. 批不合格率的上限", "C. 長期出廠品質最差的可能值", "D. 拒收批的比率"], "ans": "C", "expl": "AOQL=AOQ曲線的峰值，是採用該抽樣計畫後，長期出廠品質最差的可能平均值。"}, {"n": 41, "q": "系統抽樣（Systematic Sampling）的抽樣間隔 k = ？", "opts": ["A. 批量 N / 樣本數 n", "B. 樣本數 n / 批量 N", "C. √批量 N", "D. AQL × 批量 N"], "ans": "A", "expl": "系統抽樣：k = N/n，隨機決定第一個起始點（1≤r≤k），之後每隔k個取一個。"}, {"n": 42, "q": "計量值抽樣計畫（ANSI Z1.9）相比計數值（Z1.4）的優點是？", "opts": ["A. 不需要常態分配假設", "B. 相同保護程度下所需樣本數更少", "C. 適用於所有資料類型", "D. 計算更為簡單"], "ans": "B", "expl": "計量值抽樣利用每個樣本的量測資訊，同等保護程度下樣本數約為計數值的1/2~1/3。"}, {"n": 43, "q": "批量 N=1,000，GIS II，AQL=2.5%，正常單次抽樣，樣本代字為？", "opts": ["A. G", "B. J", "C. K", "D. H"], "ans": "B", "expl": "N=501~1200，GIS II → 樣本代字 J；n=80，AQL 2.5%正常單次 → Ac=5，Re=6。"}, {"n": 44, "q": "下列哪種情況「最不適合」使用抽樣檢驗？", "opts": ["A. 批量大且破壞性試驗", "B. 檢驗成本高昂", "C. 零缺點要求的生命攸關零件", "D. 允許少量缺陷存在"], "ans": "C", "expl": "生命攸關（Safety Critical）零件不能依賴抽樣風險，需全數或100%自動化檢測。"}, {"n": 45, "q": "平均全檢數（ATI）在批不合格率 p 很低（品質很好）時，ATI 趨近於？", "opts": ["A. 批量 N", "B. 樣本數 n", "C. 0", "D. AQL × N"], "ans": "B", "expl": "品質好時多數批允收，ATI≈n（只抽樣不全檢）；品質差時多數批拒收後全檢，ATI→N。"}, {"n": 46, "q": "允收數 c=0 的抽樣計畫，其 OC 曲線特性是？", "opts": ["A. 對生產者最有利", "B. OC曲線較陡，對小缺陷率也有高拒收機率", "C. 樣本數可大幅減少", "D. 消費者風險最高"], "ans": "B", "expl": "c=0：任一不良即拒收，OC曲線陡峭，對生產者嚴格（α↑），但對消費者保護也強。"}, {"n": 47, "q": "二項分配 B(n,p) 的變異數 Var(X) = ？", "opts": ["A. np", "B. np(1-p)", "C. np²", "D. n²p(1-p)"], "ans": "B", "expl": "二項分配：E(X)=np，Var(X)=np(1-p)=npq，標準差=√(npq)。"}, {"n": 48, "q": "泊松分配（Poisson Distribution）的重要特性是？", "opts": ["A. 平均數 ≠ 變異數", "B. 平均數 = 變異數 = λ", "C. 僅適用於二元結果", "D. 需要有限樣本空間"], "ans": "B", "expl": "Poisson分配：E(X)=Var(X)=λ；這是泊松分配的識別特徵，常用於考題辨識。"}, {"n": 49, "q": "超幾何分配（Hypergeometric）與二項分配最主要的差異是？", "opts": ["A. 超幾何用於連續資料", "B. 超幾何用於無放回抽樣（有限母體）", "C. 二項用於無放回且有限母體", "D. 兩者在大樣本下差異很大"], "ans": "B", "expl": "超幾何=無放回抽樣（有限母體）；二項=有放回或母體很大；有限母體無放回用超幾何。"}, {"n": 50, "q": "標準常態分配中，P(−1.96 < Z < 1.96) ≈ ？", "opts": ["A. 68.27%", "B. 95.00%", "C. 95.45%", "D. 99.73%"], "ans": "B", "expl": "Z=±1.96 → 95.00%；Z=±1 → 68.27%；Z=±2 → 95.45%；Z=±3 → 99.73%。"}, {"n": 51, "q": "若 X ~ N(μ, σ²)，則 P(X > μ + 2σ) ≈ ？", "opts": ["A. 15.87%", "B. 4.55%", "C. 2.28%", "D. 0.13%"], "ans": "C", "expl": "P(Z>2)=1-Φ(2)=1-0.9772=0.0228=2.28%；P(Z>1)≈15.87%；P(Z>3)≈0.13%。"}, {"n": 52, "q": "中央極限定理（CLT）說明，樣本平均數 X̄ 的抽樣分配趨近？", "opts": ["A. N(μ, σ²)", "B. N(μ, σ²/n)", "C. t(n-1)", "D. χ²(n-1)"], "ans": "B", "expl": "CLT：X̄ ~ N(μ, σ²/n)，標準誤SE=σ/√n；n愈大，X̄的分配愈接近常態。"}, {"n": 53, "q": "幾何分配（Geometric Distribution）描述的是？", "opts": ["A. n次試驗中的成功次數", "B. 第一次成功前所需的試驗次數", "C. 單位時間內的事件次數", "D. 無放回抽樣的抽樣結果"], "ans": "B", "expl": "幾何分配：P(X=k)=(1-p)^(k-1)×p，描述第一次成功前需要的試驗次數。"}, {"n": 54, "q": "標準常態分配的峰態係數（Kurtosis）= ？", "opts": ["A. 0", "B. 1", "C. 2", "D. 3"], "ans": "D", "expl": "標準常態分配：偏態係數=0（對稱），峰態係數（超峰態=0，絕對峰態=3）。"}, {"n": 55, "q": "t 分配當自由度趨向無窮大（df→∞）時，趨近於？", "opts": ["A. 卡方分配", "B. 標準常態分配 N(0,1)", "C. F 分配", "D. 均勻分配"], "ans": "B", "expl": "t分配尾部比常態厚；df越大越接近標準常態；df→∞時，t分配=N(0,1)。"}, {"n": 56, "q": "若 X ~ B(20, 0.1)，E(X) = 2，則 Var(X) = ？", "opts": ["A. 2", "B. 0.2", "C. 1.8", "D. 4"], "ans": "C", "expl": "Var(X)=np(1-p)=20×0.1×0.9=1.8；E(X)=np=20×0.1=2。"}, {"n": 57, "q": "指數分配（Exponential）具有「無記憶性」，意義是？", "opts": ["A. 量測值不隨時間改變", "B. P(X>s+t|X>s)=P(X>t)，過去的時間不影響未來發生機率", "C. 分配呈完全對稱", "D. 平均數永遠等於標準差"], "ans": "B", "expl": "無記憶性：已等待 s 時間，再等 t 時間的機率，等同於全新計時等 t 時間的機率。"}, {"n": 58, "q": "「95% 信賴區間」的正確統計解讀是？", "opts": ["A. 母體參數有95%機率落在此區間", "B. 重複抽樣多次，約95%的區間會涵蓋真實母體參數", "C. 95%的樣本觀測值落在此範圍", "D. 犯Type I Error的機率為95%"], "ans": "B", "expl": "頻率學觀點：信賴區間是隨機的（每次抽樣不同），95%代表長期涵蓋率，非機率。"}, {"n": 59, "q": "p 管制圖監控的是哪個統計量？", "opts": ["A. 每批不良品數量（整數）", "B. 不良率（比例，0~1之間）", "C. 每單位缺點數", "D. 個別量測值"], "ans": "B", "expl": "p圖=不良率；np圖=不良品數（固定n）；c圖=缺點數（固定n）；u圖=單位缺點數（n可變）。"}, {"n": 60, "q": "製程能力指數 Cpk = 1.33 對應的製程σ水準約為？", "opts": ["A. 3σ", "B. 4σ", "C. 5σ", "D. 6σ"], "ans": "B", "expl": "Cpk=1.0→3σ；Cpk=1.33→4σ（IATF 16949最低要求）；Cpk=1.67→5σ；Cpk=2.0→6σ。"}, {"n": 61, "q": "X̄-R 管制圖中，若 X̄ 圖出現趨勢但 R 圖穩定，最可能的原因是？", "opts": ["A. 製程變異性逐漸增大", "B. 設備精度下降", "C. 製程平均值發生緩慢偏移", "D. 量測系統有問題"], "ans": "C", "expl": "X̄圖監控製程位置（均值），R圖監控散布（變異）；X̄趨勢+R穩定=均值漂移。"}, {"n": 62, "q": "%GR&R < 10% 代表量測系統的判斷結論是？", "opts": ["A. 量測系統不合格", "B. 需要改善，但可暫時使用", "C. 量測系統可接受", "D. 必須更換量具"], "ans": "C", "expl": "%GR&R<10%→可接受；10%~30%→條件性接受（視應用而定）；>30%→不合格，需改善。"}, {"n": 63, "q": "EWMA 管制圖中，加權參數 λ 越小時（如 λ=0.05），代表？", "opts": ["A. 只使用最新一個觀測值", "B. 對過去歷史資料給予更大權重，對小偏移更敏感", "C. 等同於Shewhart X圖", "D. 只考慮最近3個觀測值"], "ans": "B", "expl": "λ小→大量歷史平均→EWMA對小且持續偏移敏感；λ=1時EWMA=Shewhart個別值圖。"}, {"n": 64, "q": "Pp（Process Performance Index）與 Cp 的主要差異是？", "opts": ["A. Pp使用 R̄/d₂ 估算短期σ", "B. Cp使用整體標準差 s 評估長期績效", "C. Pp使用整體標準差 s，反映長期製程績效", "D. 兩者在公式上完全相同"], "ans": "C", "expl": "Cp=短期能力（組內σ=R̄/d₂）；Pp=長期績效（整體s）；通常 Pp≤Cp。"}, {"n": 65, "q": "個別值管制圖（X-MR）最適用的情境是？", "opts": ["A. 每批量測4~5個樣本", "B. 每次只有一個量測值（化學製程、長週期生產）", "C. 計數型不良率資料", "D. 批量很大且需快速決策"], "ans": "B", "expl": "X-MR圖用於無法形成子群的製程（每次一個量測），MR圖用相鄰兩點的差估計變異。"}, {"n": 66, "q": "管制圖「穩定製程（In Control）」的定義是？", "opts": ["A. 所有產品均在規格界限內", "B. 製程只有普通原因（Common Cause）變異", "C. Cpk ≥ 1.33", "D. 連續20點都在管制界限以內"], "ans": "B", "expl": "管制狀態=只有隨機普通原因，無特殊原因；與規格和Cpk無直接關係。"}, {"n": 67, "q": "np 管制圖的使用前提條件是？", "opts": ["A. 不良率必須恆定", "B. 每次抽樣的樣本數 n 必須固定", "C. 批量大小必須固定", "D. 缺點數必須服從常態分配"], "ans": "B", "expl": "np圖需固定n，因為CL=np̄，若n變動則中心線也變動，應改用p圖。"}, {"n": 68, "q": "DMAIC 中「C（Control）」階段最核心的工具是？", "opts": ["A. 迴歸分析（Regression）", "B. 變異數分析（ANOVA）", "C. 管制計畫（Control Plan）與 SPC 管制圖", "D. 量測系統分析（MSA）"], "ans": "C", "expl": "Control階段=維持改善成果，核心工具：管制計畫、SPC管制圖、標準作業程序（SOP）。"}, {"n": 69, "q": "Cpk 公式中，CPU（上方製程能力）= ？", "opts": ["A. (μ − LSL) / (3σ)", "B. (USL − μ) / (3σ)", "C. (USL − LSL) / (6σ)", "D. (USL − LSL) / (3σ)"], "ans": "B", "expl": "CPU=(USL−μ)/(3σ)；CPL=(μ−LSL)/(3σ)；Cpk=min(CPU,CPL)；Cp=(USL−LSL)/(6σ)。"}, {"n": 70, "q": "CUSUM 管制圖（Cumulative Sum）判斷失控最常使用的方法是？", "opts": ["A. 傳統 ±3σ 管制界限", "B. V型遮罩（V-Mask）或決策區間（h 和 k 參數）", "C. A₂, D₃, D₄ 係數表", "D. 相關係數 r 值"], "ans": "B", "expl": "CUSUM使用V型遮罩（V-Mask）或決策區間（決策參數h=允許漂移寬度，k=參考值）。"},{"n": 101, "q": "ISO 9001:2015 遵循 PDCA 循環，其中「Do（執行）」主要對應的條款是？", "opts": ["A. 條款 4、5、6", "B. 條款 8（運作）", "C. 條款 9（績效評估）", "D. 條款 10（改善）"], "ans": "B", "expl": "Plan=條款4+5+6+7；Do=條款8（運作）；Check=條款9；Act=條款10。"}, {"n": 102, "q": "ISO 9001:2015 條款 4.2 要求組織識別？", "opts": ["A. 內部稽核計畫", "B. 利害關係者（Interested Parties）的需求與期望", "C. 顧客滿意度調查方法", "D. 供應商評鑑標準"], "ans": "B", "expl": "條款4.1=組織情境（內外部議題）；4.2=利害關係者需求；4.4=品質管理系統範圍。"}, {"n": 103, "q": "ISO 9000:2015 品質管理七大原則中，「不」包含哪項？", "opts": ["A. 顧客導向", "B. 以事實為基礎的決策", "C. 零缺陷承諾", "D. 持續改善"], "ans": "C", "expl": "七大原則：顧客導向、領導力、人員投入、流程方法、改善、證據決策、關係管理；「零缺陷」不在列。"}, {"n": 104, "q": "AS9100 Rev D 品質管理系統標準主要適用於？", "opts": ["A. 汽車製造業", "B. 醫療器材業", "C. 航太國防工業", "D. 食品加工業"], "ans": "C", "expl": "AS9100=航太防衛；IATF 16949=汽車；ISO 13485=醫療器材；ISO 22000=食品安全。"}, {"n": 105, "q": "風險矩陣（Risk Matrix）中，風險等級由哪兩個維度決定？", "opts": ["A. 發生機率 × 嚴重影響程度", "B. 可偵測性 × 發生率", "C. 成本 × 時程", "D. 顧客滿意度 × 市場佔有率"], "ans": "A", "expl": "風險=發生機率（Likelihood）×影響嚴重度（Severity）；與FMEA的RPN三維不同，矩陣通常用兩維。"}, {"n": 106, "q": "APQP（先進產品品質規劃）中，「管制計畫」分為幾種類型？", "opts": ["A. 2 種", "B. 3 種", "C. 4 種", "D. 5 種"], "ans": "B", "expl": "管制計畫分3種：原型（Prototype）、試量產前（Pre-Launch）、量產（Production）。"}, {"n": 107, "q": "FMEA 中，「嚴重度（S）」評分 9~10 分代表？", "opts": ["A. 輕微的外觀缺陷", "B. 對使用者安全或法規的嚴重影響（無預警）", "C. 功能部分喪失但可繼續使用", "D. 顧客可察覺但無功能問題"], "ans": "B", "expl": "S=9：安全/法規相關且有預警；S=10：安全/法規相關且無預警；S=1：無影響。"}, {"n": 108, "q": "AIAG-VDA FMEA（2019版）引入「AP（Action Priority）」，其優先級由哪些因素決定？", "opts": ["A. 僅由 RPN 值決定", "B. 由 S、O、D 的組合閾值表決定 H/M/L 優先級", "C. 由成本效益分析決定", "D. 僅由嚴重度 S 決定"], "ans": "B", "expl": "2019版取消RPN排序，改用AP矩陣依S-O-D組合查表定出 High/Medium/Low，強調嚴重度優先。"}, {"n": 109, "q": "IATF 16949 的「核心工具」（Core Tools）包含？", "opts": ["A. APQP, PPAP, FMEA, MSA, SPC", "B. 8D, A3, DMAIC, VSM, 5S", "C. ISO 9001, AS9100, ISO 14001", "D. PDCA, SDCA, DMADV"], "ans": "A", "expl": "IATF 16949五大核心工具：APQP（先進品質規劃）、PPAP（生產件核准）、FMEA、MSA、SPC。"}, {"n": 110, "q": "PPAP（生產零件核准程序）提交等級1的內容是？", "opts": ["A. 僅提交零件保證書（PSW）", "B. 完整PPAP資料包寄送至顧客", "C. 僅留存於供應商端", "D. 提交尺寸報告+PSW"], "ans": "A", "expl": "Level 1=僅提交PSW；Level 2=PSW+選擇性文件；Level 3=完整包；Level 4=依顧客特殊要求。"}, {"n": 111, "q": "ISO 9001:2015 條款 7.5「文件化資訊」要求，下列何者正確？", "opts": ["A. 必須有書面品質手冊", "B. 強制要求六大程序書", "C. 組織可自行決定需要何種文件，以確保有效運作", "D. 所有程序都必須文件化"], "ans": "C", "expl": "2015版取消強制品質手冊與六大程序書，改為組織自行判斷所需文件化資訊的範圍。"}, {"n": 112, "q": "「管理代表（Management Representative）」在 ISO 9001:2015 的地位為？", "opts": ["A. 仍為強制要求職位", "B. 已被取消強制要求，責任可分配給多人或由高階主管承擔", "C. 由第三方機構指派", "D. 需具備驗證員資格"], "ans": "B", "expl": "2015版取消強制「管理代表」職位；品質責任更分散，強調高階主管直接參與（條款5.1）。"}, {"n": 113, "q": "「設計驗證（Verification）」與「設計確認（Validation）」的差異是？", "opts": ["A. 兩者相同", "B. 驗證=符合設計要求；確認=符合顧客使用需求（最終使用狀況）", "C. 確認先於驗證", "D. 驗證需顧客簽核"], "ans": "B", "expl": "Verification=「我們有沒有把產品做對？」（符合規格）；Validation=「我們有沒有做對的產品？」（滿足使用需求）。"}, {"n": 114, "q": "「系統稽核」、「流程稽核」、「產品稽核」三者中，稽核深度由廣至深的順序為？", "opts": ["A. 產品→流程→系統", "B. 系統→流程→產品", "C. 流程→系統→產品", "D. 三者深度相同"], "ans": "B", "expl": "系統稽核=全面品質管理系統；流程稽核=特定製程；產品稽核=具體產品特性；深度由淺至深。"}, {"n": 115, "q": "ISO 9001:2015 條款 9.3（管理審查）的「輸入」不包含哪項？", "opts": ["A. 內部稽核結果", "B. 顧客滿意度資料", "C. 各部門員工薪資", "D. 品質目標達成狀況"], "ans": "C", "expl": "管理審查輸入：稽核結果、顧客回饋、目標達成、外部議題、風險機會、資源需求等；員工薪資不在列。"}, {"n": 116, "q": "魚骨圖（Ishikawa Diagram）最適合用於哪個問題解決步驟？", "opts": ["A. 量測問題嚴重程度", "B. 展示問題隨時間的變化", "C. 找出造成問題的可能原因", "D. 計算問題發生的機率"], "ans": "C", "expl": "魚骨圖=因果圖，用於腦力激盪並歸納可能原因（6M）；不做定量分析。"}, {"n": 117, "q": "散佈圖（Scatter Diagram）中，相關係數 r = -0.92 表示？", "opts": ["A. 強正相關", "B. 強負相關", "C. 弱負相關", "D. 無相關"], "ans": "B", "expl": "|r|>0.8=強相關；r<0=負相關（一變數增大，另一下降）；r=-0.92=強負相關。"}, {"n": 118, "q": "直方圖左側呈「懸崖型」（截斷型）分布，最可能的原因是？", "opts": ["A. 製程均值偏高", "B. 已進行全數篩選或100%檢驗，將不良品剔除", "C. 樣本數不足", "D. 規格設定太寬"], "ans": "B", "expl": "左截斷=下規格附近的資料被人為去除，通常代表有100%篩選或隱瞞報告的情況。"}, {"n": 119, "q": "查檢表（Check Sheet）中「位置查檢表」的用途是？", "opts": ["A. 記錄各類缺陷的頻率", "B. 標示缺陷在產品上的位置分布", "C. 記錄製程參數變化", "D. 排列問題優先順序"], "ans": "B", "expl": "位置查檢表（Defect Location Check Sheet）在產品示意圖上標記缺陷位置，分析缺陷集中區域。"}, {"n": 120, "q": "「層別法（Stratification）」在分析散佈圖時最重要的功能是？", "opts": ["A. 增加資料點數", "B. 避免因混合不同來源資料而產生假相關或假無相關", "C. 計算相關係數", "D. 繪製趨勢線"], "ans": "B", "expl": "不同班別/機台混合時，散佈圖可能出現假象；層別後各組單獨分析，才能揭露真實關係。"}, {"n": 121, "q": "柏拉圖中，欄位排列的正確方式是？", "opts": ["A. 依問題字母順序", "B. 依頻率由低至高", "C. 依頻率由高至低", "D. 依時間先後順序"], "ans": "C", "expl": "柏拉圖=由高至低排列，累積折線由左往右上升；目的是快速識別最重要的問題類別。"}, {"n": 122, "q": "管制圖（Control Chart）是由哪位學者發明的？", "opts": ["A. 朱蘭（Juran）", "B. 戴明（Deming）", "C. 休哈特（Shewhart）", "D. 克勞斯比（Crosby）"], "ans": "C", "expl": "Walter Shewhart 於1924年在貝爾實驗室發明管制圖；戴明則將PDCA推廣普及（原為Shewhart Cycle）。"}, {"n": 123, "q": "「走勢圖（Run Chart）」與「管制圖」最主要的差異是？", "opts": ["A. 走勢圖有管制界限，管制圖沒有", "B. 走勢圖只繪製資料時間序列，沒有統計計算出的管制界限", "C. 走勢圖只用於計數型資料", "D. 管制圖不需要時間序列"], "ans": "B", "expl": "走勢圖（Run Chart）只有中位數或目標線，無UCL/LCL；管制圖有以統計計算的±3σ管制界限。"}, {"n": 124, "q": "在新QC七手法中，「關聯圖（Relations Diagram）」主要用於？", "opts": ["A. 規劃專案時程", "B. 找出複雜問題中各要因之間的因果關係鏈", "C. 歸納整合語言資訊", "D. 矩陣比較方案優劣"], "ans": "B", "expl": "關聯圖：原因→結果箭頭，適用於多因素相互影響的複雜問題；親和圖是歸納整合。"}, {"n": 125, "q": "箭線圖（Arrow Diagram）相當於專案管理中的哪個工具？", "opts": ["A. 甘特圖（Gantt Chart）", "B. PERT/CPM（關鍵路徑法）", "C. WBS（工作分解結構）", "D. 資源直方圖"], "ans": "B", "expl": "箭線圖=AON/AOA網路圖，顯示活動順序與關鍵路徑，等同於PERT/CPM；甘特圖為橫條時程圖。"}, {"n": 126, "q": "矩陣圖（Matrix Diagram）最適合用來？", "opts": ["A. 分析因果關係", "B. 顯示兩組或多組要素間的相互關係強弱", "C. 展示製程流程順序", "D. 追蹤累積資料趨勢"], "ans": "B", "expl": "矩陣圖：行列交叉點標示關係強弱（◎○△×），常見如QFD品質屋、4M管制矩陣。"}, {"n": 127, "q": "樹狀圖（Tree Diagram）在新QC七手法中的用途是？", "opts": ["A. 展示資料分配", "B. 系統化地將目標分解為子目標與具體執行任務", "C. 顯示活動網路關係", "D. 按主題分類構想"], "ans": "B", "expl": "樹狀圖=系統圖，由目標→手段→方法→細節逐層展開，用於規劃與問題對策展開。"}, {"n": 128, "q": "PDPC（過程決策程式圖）最適合用於？", "opts": ["A. 記錄製程流程", "B. 在計畫執行前預測可能的障礙並提前擬定對策", "C. 比較設計方案", "D. 分析歷史缺陷數據"], "ans": "B", "expl": "PDPC=預防計畫圖；「若…則…」場景分析，事前準備對策，常用於新產品開發與專案風險管理。"}, {"n": 129, "q": "流程圖中，菱形（◇）符號代表？", "opts": ["A. 作業步驟", "B. 決策/判斷點（Decision Point）", "C. 開始/結束", "D. 文件輸入"], "ans": "B", "expl": "流程圖符號：矩形=作業；菱形=決策（是/否）；橢圓=開始/終止；平行四邊形=輸入/輸出。"}, {"n": 130, "q": "QFD（品質機能展開）「品質屋」中，「屋頂（Roof）」矩陣代表？", "opts": ["A. 顧客需求（Whats）清單", "B. 工程技術特性（Hows）之間的相關矩陣", "C. 競爭者比較分析", "D. 技術目標值設定"], "ans": "B", "expl": "屋頂=技術特性（How vs. How）的相互影響分析，顯示各設計參數間的衝突或協同關係。"}, {"n": 131, "q": "ANSI Z1.4 中，AQL（允收品質水準）在 OC 曲線上對應的生產者風險通常為？", "opts": ["A. α = 1%", "B. α = 5%", "C. α = 10%", "D. α = 50%"], "ans": "B", "expl": "按慣例，AQL點對應的生產者風險 α ≈ 5%，即良批被誤判拒收的機率約5%。"}, {"n": 132, "q": "ANSI Z1.4 中，從「加嚴（Tightened）」轉換回「正常（Normal）」的條件是？", "opts": ["A. 連續5批在加嚴下全數允收", "B. 連續5批在正常下全數允收", "C. 連續10批在加嚴下全數允收", "D. 顧客書面同意"], "ans": "A", "expl": "Tightened→Normal：連續5批在加嚴下允收；Normal→Tightened：近5批中有2批拒收。"}, {"n": 133, "q": "「LTPD（批允收品質界限）」是指對應消費者風險（β）的批不良率，β 通常為？", "opts": ["A. β = 1%", "B. β = 5%", "C. β = 10%", "D. β = 20%"], "ans": "C", "expl": "LTPD（Lot Tolerance Percent Defective）：β=10%（消費者風險），即劣批允收的機率≤10%。"}, {"n": 134, "q": "在抽樣檢驗中，「Type II Error（β）」的定義是？", "opts": ["A. 良批被拒收", "B. 劣批被允收（消費者風險）", "C. 樣本數不足", "D. AQL 超標"], "ans": "B", "expl": "α（Type I）=良批拒收=生產者風險；β（Type II）=劣批允收=消費者風險，即放行問題批。"}, {"n": 135, "q": "連續抽樣計畫（Continuous Sampling Plan, CSP）最適用於？", "opts": ["A. 離散批量生產", "B. 連續大量製造的流線型生產（如化工、食品連續線）", "C. 小批量高價值品", "D. 破壞性試驗"], "ans": "B", "expl": "CSP用於無法分批的連續生產；以個別件輪替全數→抽樣→全數的方式管控出廠品質。"}, {"n": 136, "q": "「平均出廠品質（AOQ）」的公式為 AOQ ≈ p × Pa。當 p 趨近 0 時，AOQ？", "opts": ["A. 趨近 1（最差）", "B. 趨近 0（最佳，因為好的批幾乎全數允收）", "C. 趨近 AOQL", "D. 等於 AQL"], "ans": "B", "expl": "p→0（品質極好）時，Pa→1（幾乎全數允收），AOQ≈p×1→0；品質越好，出廠品質也越好。"}, {"n": 137, "q": "「跳批抽樣（Skip-Lot Sampling）」最適合用在什麼情況？", "opts": ["A. 新供應商第一批來料", "B. 供應商已長期展示優異且穩定的品質記錄", "C. 高安全性零件的進料驗收", "D. 不良率超過 AQL 的情形"], "ans": "B", "expl": "Skip-Lot=對已證明品質穩定的供應商降低抽樣頻率，以節省驗收資源；不適用於未驗證的供應商。"}, {"n": 138, "q": "道奇-羅明（Dodge-Romig）抽樣表設計的主要目標是？", "opts": ["A. 最小化生產者風險", "B. 最小化平均全檢數（ATI），在保證 AOQL 或 LTPD 的條件下", "C. 最小化樣本數", "D. 最大化 AQL"], "ans": "B", "expl": "Dodge-Romig表：已知製程平均不良率時，找出使ATI最小的n和c，有兩種表：AOQL表與LTPD表。"}, {"n": 139, "q": "OC 曲線「斜率越陡峭」代表？", "opts": ["A. 區分良批與劣批的能力越弱", "B. 區分良批與劣批的能力越強（辨別力高）", "C. 樣本數越小", "D. 消費者風險越大"], "ans": "B", "expl": "OC曲線越陡（趨近垂直）=辨別力越高，能清楚分開好批（Pa≈1）與壞批（Pa≈0）；n越大越陡。"}, {"n": 140, "q": "「允收數 c=0」的抽樣計畫，對生產者的影響是？", "opts": ["A. 生產者風險大幅降低", "B. 生產者風險大幅增加（任一不良即拒收，α↑）", "C. 對生產者無影響", "D. 只影響消費者風險"], "ans": "B", "expl": "c=0：任何一件不良品即拒收，在同等n下生產者風險α顯著高於c>0的計畫；整體保護更嚴格。"}, {"n": 141, "q": "ANSI Z1.9（計量值抽樣）相比 Z1.4（計數值）的主要優勢是？", "opts": ["A. 不需要常態分配假設", "B. 相同保護水準下，所需樣本數更少（約1/2~1/3）", "C. 適用於所有資料分配", "D. 計算更為簡單"], "ans": "B", "expl": "計量值抽樣利用每個量測值的完整資訊，效率更高；但需要常態分配假設，否則需使用其他方法。"}, {"n": 142, "q": "二次抽樣（Double Sampling）的優點是？", "opts": ["A. 計算比單次更簡單", "B. 對品質極好或極差的批，ASN 通常小於單次抽樣", "C. 允收數一定比單次大", "D. 可消除消費者風險"], "ans": "B", "expl": "雙次抽樣：品質明顯好（第一次即允收）或差（第一次即拒收）時，平均樣本數ASN<單次n。"}, {"n": 143, "q": "批量 N=800，GIS II，AQL=1.0%，正常單次抽樣（ANSI Z1.4），樣本代字為？", "opts": ["A. H", "B. J", "C. K", "D. L"], "ans": "B", "expl": "N=501~1200，GIS II → 樣本代字 J；n=80，AQL=1.0%正常單次 → Ac=2，Re=3。"}, {"n": 144, "q": "下列何種產品「最不適合」使用抽樣驗收？", "opts": ["A. 大批量電子零件", "B. 破壞性試驗材料", "C. 攸關生命安全的醫療植入物", "D. 一般包裝材料"], "ans": "C", "expl": "生命安全零件（Safety Critical）不允許抽樣風險，需全數自動化100%檢測或其他保證方式。"}, {"n": 145, "q": "「生產者風險點（Producer's Risk Point）」在OC曲線上的位置是？", "opts": ["A. 對應消費者風險 β 的點", "B. 對應允收機率=（1-α）的不良率點，通常靠近 AQL", "C. OC曲線的中點", "D. 對應 Pa=50% 的點"], "ans": "B", "expl": "生產者風險點：批不良率=AQL，對應Pa=（1-α）≈95%；消費者風險點：批不良率=LTPD，Pa=β≈10%。"}, {"n": 146, "q": "中央極限定理（CLT）指出，當樣本數 n 足夠大時（通常 n≥30），X̄ 的抽樣分配會趨近？", "opts": ["A. t 分配（自由度n-1）", "B. 常態分配 N(μ, σ²/n)", "C. 卡方分配", "D. F 分配"], "ans": "B", "expl": "CLT核心：無論母體分配為何，X̄ 的抽樣分配在n夠大時趨近常態；σ²/n反映樣本均值的變異。"}, {"n": 147, "q": "若 σ=4，n=64，則樣本平均數的標準誤（SE）= ？", "opts": ["A. 4", "B. 2", "C. 0.5", "D. 1"], "ans": "C", "expl": "SE = σ/√n = 4/√64 = 4/8 = 0.5；標準誤隨樣本數增大而減小。"}, {"n": 148, "q": "99% 信賴區間相比 95% 信賴區間？", "opts": ["A. 較窄（更精確）", "B. 較寬（涵蓋更大範圍以提高信心）", "C. 寬度相同", "D. 取決於樣本數"], "ans": "B", "expl": "信心程度越高（99%>95%），需要更寬的區間才能涵蓋真實參數；寬度與z值成正比（z=2.576 vs 1.96）。"}, {"n": 149, "q": "F 分配常用於哪類假設檢定？", "opts": ["A. 比較兩樣本均值", "B. 比較兩個或多個變異數（含ANOVA）", "C. 測試常態性", "D. 二項比例估計"], "ans": "B", "expl": "F分配用於：兩變異數比（σ₁²/σ₂²）的檢定 和 ANOVA（分析組間vs組內變異比值）。"}, {"n": 150, "q": "ANOVA（變異數分析）的虛無假設 H₀ 是？", "opts": ["A. 所有樣本變異數相等", "B. 所有母體均值相等（μ₁=μ₂=...=μk）", "C. 資料服從常態分配", "D. 因子間無交互作用"], "ans": "B", "expl": "ANOVA H₀：所有組別均值相等；H₁：至少一組均值不同；F值=組間變異/組內變異。"}, {"n": 151, "q": "假設檢定中，減少犯 Type I Error 的機率（α）而不改變樣本數，會造成？", "opts": ["A. Type II Error（β）也減少", "B. Type II Error（β）增大", "C. 檢定力（1-β）增加", "D. 對 β 無影響"], "ans": "B", "expl": "α↓且n固定 → β↑（更難拒絕H₀，劣批更易漏網）；同時降低α和β需增加n。"}, {"n": 152, "q": "迴歸分析的決定係數 R²=0.85 的解讀是？", "opts": ["A. 相關係數 r=0.85", "B. Y的變異中有85%可由迴歸模型（自變數X）解釋", "C. 有15%的資料被排除", "D. 預測準確率為85%"], "ans": "B", "expl": "R²=SSR/SST，表示模型解釋了多少Y的變異；R²=0.85表示模型解釋了85%的Y變異（未解釋15%）。"}, {"n": 153, "q": "指數分配（Exponential Distribution）最常用於建模何種情境？", "opts": ["A. 各種品質特性的分配", "B. 固定失效率（隨機失效）情況下的失效時間", "C. 計數型不良品數", "D. 子群平均值的分配"], "ans": "B", "expl": "指數分配描述Poisson過程中事件間的等待時間；在可靠度中對應「浴缸曲線」的隨機失效期。"}, {"n": 154, "q": "威布爾分配（Weibull）形狀參數 β=1 時，等同於？", "opts": ["A. 常態分配", "B. 指數分配（固定失效率）", "C. 對數常態分配", "D. 二項分配"], "ans": "B", "expl": "β<1=遞減失效率（早夭）；β=1=固定失效率=指數分配（隨機失效）；β>1=遞增失效率（磨耗）。"}, {"n": 155, "q": "「檢定力（Power of the Test）」的定義是？", "opts": ["A. α（Type I Error 機率）", "B. β（Type II Error 機率）", "C. 1-β（正確拒絕假 H₀ 的機率）", "D. 1-α"], "ans": "C", "expl": "Power=1-β，即H₁為真時成功拒絕H₀的能力；Power越高=越能偵測到真實差異；與n正相關。"}, {"n": 156, "q": "χ²（卡方）獨立性檢定用於？", "opts": ["A. 比較兩組連續數據的均值", "B. 檢定兩個類別變數是否相互獨立", "C. 測試樣本是否來自常態母體", "D. 比較兩組的標準差"], "ans": "B", "expl": "卡方獨立性檢定：列聯表（Contingency Table）中行列變數是否獨立；χ²=(觀測-期望)²/期望，求和。"}, {"n": 157, "q": "常態分配中，P(μ-1.645σ < X < μ+1.645σ) ≈ ？", "opts": ["A. 68.27%", "B. 90.00%", "C. 95.45%", "D. 99.00%"], "ans": "B", "expl": "Z=±1.645 → 90%；Z=±1 → 68.27%；Z=±1.96 → 95%；Z=±2 → 95.45%；Z=±2.576 → 99%。"}, {"n": 158, "q": "若 X₁~N(μ₁,σ₁²) 與 X₂~N(μ₂,σ₂²) 獨立，則 X₁+X₂ 的分配為？", "opts": ["A. N(μ₁+μ₂, σ₁+σ₂)", "B. N(μ₁+μ₂, σ₁²+σ₂²)", "C. N(μ₁×μ₂, σ₁²×σ₂²)", "D. t 分配"], "ans": "B", "expl": "兩個獨立常態分配相加：均值相加，變異數相加（不是標準差相加）；σ_sum=√(σ₁²+σ₂²)。"}, {"n": 159, "q": "「無母數統計法（Nonparametric）」相比參數法的特點是？", "opts": ["A. 需要更嚴格的分配假設", "B. 不需要常態分配等特定分配假設，適用於小樣本或有序資料", "C. 統計效力通常更高", "D. 只適用於計量資料"], "ans": "B", "expl": "無母數法：無需分配假設；適用於次序尺度、小樣本、偏態資料；但統計效力通常低於參數法。"}, {"n": 160, "q": "Kruskal-Wallis 檢定是哪個參數統計法的無母數對應版本？", "opts": ["A. 配對 t 檢定", "B. 單因子 ANOVA", "C. 卡方檢定", "D. F 比值檢定"], "ans": "B", "expl": "Kruskal-Wallis=單因子ANOVA的無母數版本，用秩次（Rank）代替原始數值比較多組。"}, {"n": 161, "q": "X̄-R 管制圖中，「R 圖」監控的是製程的哪個特性？", "opts": ["A. 製程均值的穩定性", "B. 製程變異（散布）的穩定性", "C. 批不良率", "D. 個別量測值"], "ans": "B", "expl": "R圖=組內全距，監控製程變異；X̄圖監控製程位置（均值）。兩圖搭配才能完整監控製程。"}, {"n": 162, "q": "建立管制圖管制界限，通常建議至少需要幾組（子群）的資料？", "opts": ["A. 5~10 組", "B. 20~25 組", "C. 50 組以上", "D. 100 組以上"], "ans": "B", "expl": "一般建議20~25組以上，才能有足夠資料估計穩定的X̄̄和R̄；組數太少管制界限不可靠。"}, {"n": 163, "q": "I-MR（個別值-移動全距）管制圖最適合哪種情境？", "opts": ["A. 每批量測4~5個樣本", "B. 每次只有單一量測值（化工、長週期製程）", "C. 計數型不良率資料", "D. 子群樣本數 n>10"], "ans": "B", "expl": "I-MR圖：X圖監控個別值，MR圖用相鄰兩點差估計變異；適用於每次只有一個觀測的製程。"}, {"n": 164, "q": "u 管制圖（單位缺點數管制圖）與 c 圖的差異是？", "opts": ["A. u 圖用於固定樣本數", "B. u 圖允許每次抽樣的樣本數不同（變動n），以「單位缺點數」標準化", "C. u 圖監控不良品數", "D. c 圖允許變動樣本數"], "ans": "B", "expl": "c圖：固定樣本大小（如每次固定1片PCB）；u圖：可變樣本大小，u=總缺點數/樣本數，更有彈性。"}, {"n": 165, "q": "管制圖出現「緊縮（Hugging）中心線」現象（幾乎所有點都在中心線1σ內），最可能原因是？", "opts": ["A. 製程控制極佳", "B. 子群混合了兩個或多個製程的資料，或計算錯誤", "C. 製程變異趨於零", "D. 量測解析度不足"], "ans": "B", "expl": "緊縮中心線=子群內變異被人為增大（混合不同製程），使R̄過大→管制界限過寬→所有點看似「緊縮」。"}, {"n": 166, "q": "np 管制圖的中心線（CL）公式是？", "opts": ["A. p̄（平均不良率）", "B. n × p̄（平均不良品數）", "C. √(np̄(1-p̄))", "D. p̄(1-p̄)/n"], "ans": "B", "expl": "np圖CL = np̄；UCL = np̄+3√(np̄(1-p̄))；LCL = np̄-3√(np̄(1-p̄))（負數取0）。"}, {"n": 167, "q": "CUSUM（累積和）管制圖相比休哈特管制圖，對何種異常更敏感？", "opts": ["A. 突發的大幅偏移（>3σ）", "B. 小而持續的製程均值偏移（1~2σ的漂移）", "C. 製程變異增大", "D. 離群值（Outliers）"], "ans": "B", "expl": "CUSUM累積每個點的偏差，對小持續偏移敏感；Shewhart圖對大突發偏移（>3σ）更有效。"}, {"n": 168, "q": "Western Electric 規則（8大判斷規則）中，「規則3」是指？", "opts": ["A. 連續2點中有1點在2σ外", "B. 連續4點中有3點在1σ外（同側）", "C. 連續6點持續上升或下降", "D. 14點交替上下"], "ans": "B", "expl": "WE Rule 3：連續4點中有3點在同側1σ外（Zone A以外）=趨勢信號；Rule 4=連續6點單調趨勢。"}, {"n": 169, "q": "u 管制圖的控制界限 UCL_u = ？", "opts": ["A. ū + 3√(ū)", "B. ū + 3√(ū/n)", "C. ū + A₂ × MR̄", "D. D₄ × ū"], "ans": "B", "expl": "UCL_u = ū + 3√(ū/n)，其中ū=平均單位缺點數，n=每次檢驗的樣本數；n變動時界限也隨之改變。"}, {"n": 170, "q": "管制圖「穩定且有能力（In Control and Capable）」代表？", "opts": ["A. 只有普通原因變異，且Cpk≥規定值", "B. 製程均值=目標值", "C. 所有點在±2σ內", "D. 不良率=0"], "ans": "A", "expl": "Stable（穩定）=只有普通原因，無特殊原因信號；Capable（有能力）=Cpk≥門檻（如1.33）；兩者獨立概念。"}, {"n": 171, "q": "「合理子群（Rational Subgroup）」的組成原則是？", "opts": ["A. 盡可能使子群樣本數最大", "B. 子群內變異最小（同一短暫時間、機台、原料），子群間能偵測到製程偏移", "C. 完全隨機抽樣", "D. 固定時間間隔且每組n=5"], "ans": "B", "expl": "合理子群：子群內=普通原因（最小）；子群間=製程偏移（最易顯現）；這是SPC有效性的關鍵。"}, {"n": 172, "q": "個別值管制圖中，移動全距（MR）的計算方式是？", "opts": ["A. 相鄰兩個觀測值的平均", "B. 相鄰兩個觀測值之差的絕對值，|Xᵢ - Xᵢ₋₁|", "C. 每組內最大值-最小值", "D. 觀測值與均值的差"], "ans": "B", "expl": "MR = |Xᵢ - Xᵢ₋₁|，反映短期相鄰點的變異；MR̄/d₂（d₂=1.128 for n=2）估算製程短期標準差。"}, {"n": 173, "q": "製程「穩定（In Control）」但 Cpk = 0.85，此狀況代表？", "opts": ["A. 兩者矛盾，不可能同時發生", "B. 製程可預測，但不符合規格要求（不良品會產生）", "C. 製程完全沒問題", "D. 需要更多管制圖判斷"], "ans": "B", "expl": "穩定（In Control）≠有能力（Capable）。穩定=只有普通原因；Cpk<1=製程散布超出規格寬度→有不良品。"}, {"n": 174, "q": "短期製程 SPC（Short-Run SPC）的標準化管制圖，將不同零件的資料？", "opts": ["A. 合并在同一張圖，不做處理", "B. 轉換為標準化偏差值（Z分數），使不同規格的零件可在同張圖比較", "C. 分別建立各自的管制圖", "D. 只用屬性資料"], "ans": "B", "expl": "短期SPC：Z = (X - Target) / σ，標準化後不同零件的資料可繪於同一張CUSUM或Z圖。"}, {"n": 175, "q": "管制圖的「Phase I」（建立階段）目標是？", "opts": ["A. 生產線上的即時監控", "B. 回顧性分析歷史資料以建立初步管制界限（去除特殊原因後）", "C. 顧客驗收測試", "D. 設備校正"], "ans": "B", "expl": "Phase I：蒐集歷史資料→識別並去除特殊原因→建立基準管制界限；Phase II：用已建界限進行即時監控。"}, {"n": 176, "q": "Cp = 1.33 等同於製程的幾個 σ 水準？", "opts": ["A. 3σ", "B. 4σ", "C. 5σ", "D. 6σ"], "ans": "B", "expl": "Cp = (USL-LSL)/(6σ) = 1.33 → USL-LSL = 8σ，規格寬度含 ±4σ，即 4σ 水準（短期不良率約63 PPM）。"}, {"n": 177, "q": "當只有單側規格（如只有 USL，無 LSL）時，適用的製程能力指數是？", "opts": ["A. Cp（雙側）", "B. CPU 或 CPL（單側能力指數）", "C. Cr（能力比）", "D. Cpm（田口能力指數）"], "ans": "B", "expl": "單側規格：只用CPU=(USL-μ)/(3σ) 或 CPL=(μ-LSL)/(3σ)；Cp需要雙側規格，不適用。"}, {"n": 178, "q": "能力比（Cr = 1/Cp），若 Cr = 0.75，代表？", "opts": ["A. Cp = 0.75（製程能力不足）", "B. Cp = 1.33（製程能力良好）", "C. 製程利用75%的規格空間", "D. B 和 C 都正確"], "ans": "D", "expl": "Cr = 1/Cp = 0.75 → Cp = 1/0.75 = 1.33；同時，Cr代表製程散布占規格寬的比例，0.75=佔75%。"}, {"n": 179, "q": "6σ 製程（含1.5σ偏移）的 Cpk 約為？", "opts": ["A. 2.0（無偏移時）", "B. 1.5", "C. 1.0", "D. 0.5"], "ans": "B", "expl": "無偏移6σ：Cpk=2.0；含1.5σ偏移後：Cpk=(6σ-1.5σ)/(3σ)=4.5/3=1.5；不良率=3.4PPM。"}, {"n": 180, "q": "當 Cp > Cpk 時，代表什麼製程狀況？", "opts": ["A. 製程有能力但未在規格中心（偏移）", "B. 製程精度不足", "C. 規格設定太嚴", "D. Cpk 計算錯誤"], "ans": "A", "expl": "Cp>Cpk→製程有潛在能力但均值未對準目標（偏移）；完全居中時Cp=Cpk；對準後Cpk可達Cp的水準。"}, {"n": 181, "q": "Cpm（田口製程能力指數）懲罰的是？", "opts": ["A. 僅過大的製程變異", "B. 製程均值偏離目標值（T）以及過大的製程變異", "C. 僅均值偏離", "D. 樣本數不足"], "ans": "B", "expl": "Cpm分母=√[σ²+(μ-T)²]，同時考量散布和偏目標值；Cpm≤Cpk，均值越偏離T，Cpm降越多。"}, {"n": 182, "q": "IATF 16949 對量產新品初始製程能力要求通常為 Ppk ≥ ？", "opts": ["A. 1.00", "B. 1.33", "C. 1.67", "D. 2.00"], "ans": "C", "expl": "IATF 16949新品PPAP初始製程能力：Ppk≥1.67（短期/初始），量產穩定後Cpk≥1.33。"}, {"n": 183, "q": "當製程資料非常態分配時，傳統 Cpk 計算的問題是？", "opts": ["A. 完全無效，無法使用", "B. 可能高估或低估真實製程能力，需轉換或使用百分位法", "C. 只有在n<30時才有問題", "D. 對單側規格無影響"], "ans": "B", "expl": "非常態資料：傳統Cpk假設常態→結論可能不準確；解決：Box-Cox轉換、Johnson轉換、或百分位法計算非常態Cpk。"}, {"n": 184, "q": "AIAG MSA手冊建議，GR&R研究中操作員數至少幾位？", "opts": ["A. 1", "B. 2", "C. 3", "D. 5"], "ans": "C", "expl": "標準GR&R：≥3位操作員×≥10個零件×≥2次重複=60個量測點；3人可分析再現性（AV）。"}, {"n": 185, "q": "量測系統分析中，「穩定性（Stability）」是指？", "opts": ["A. 同一操作員多次量測同件的一致性", "B. 量測系統在一段時間內對相同基準件的量測偏差", "C. 量具在不同操作員間的一致性", "D. 量具不受環境影響的能力"], "ans": "B", "expl": "穩定性=隨時間的量具漂移（Bias的時間變化）；重複性=同一操作員/同一條件的散布；兩者不同。"}, {"n": 186, "q": "量測系統「線性（Linearity）」是指？", "opts": ["A. 量測值隨操作員不同的差異", "B. 量測系統在整個操作範圍內偏差（Bias）的一致性", "C. 量測的重複性", "D. 量具與規格的比值"], "ans": "B", "expl": "線性：在量測範圍（Min~Max）的不同點，Bias是否保持一致；若低值偏差小/高值偏差大=線性問題。"}, {"n": 187, "q": "屬性型 GR&R（Pass/Fail），評估操作員間一致性最常使用的統計量是？", "opts": ["A. ANOVA F值", "B. Kappa 統計量", "C. 相關係數 r", "D. χ² 值"], "ans": "B", "expl": "Kappa=衡量評分者間一致性（超越機率的一致）；Kappa>0.75=良好一致；0.4~0.75=中等；<0.4=差。"}, {"n": 188, "q": "「鑑別力（ndc，Number of Distinct Categories）」≥5 的含義是？", "opts": ["A. %GR&R < 30%", "B. 量測系統能夠分辨至少5個不同等級的零件品質", "C. 重複性合格", "D. 校正周期正確"], "ans": "B", "expl": "ndc=1.41×(PV/GR&R)；ndc≥5=量具能有效分類零件（至少5個可辨別的級距）；<5=需改善量具。"}, {"n": 189, "q": "量具解析度（Gauge Resolution/Discrimination）建議至少應達到規格寬度（T）的？", "opts": ["A. 20%（1/5）", "B. 10%（1/10）或更小", "C. 50%（1/2）", "D. 1%（1/100）"], "ans": "B", "expl": "一般建議：解析度≤T/10（即規格寬的1/10）；也稱「10:1法則」；解析度不足則無法有效分辨差異。"}, {"n": 190, "q": "管制計畫（Control Plan）中，「管制方法」欄位描述的是？", "opts": ["A. 品質目標", "B. 針對每個管制特性如何監控及對超標如何回應（SPC、全數檢驗、目視等）", "C. 顧客驗收標準", "D. 供應商評鑑方法"], "ans": "B", "expl": "管制計畫：識別哪些特性需管控、用何方式（SPC/全數/抽樣）、頻率多少、失控時如何反應。"}, {"n": 191, "q": "PPAP（生產零件核准程序）的主要目的是？", "opts": ["A. 確認供應商財務健全", "B. 確認供應商製程能力符合設計意圖，且能批量穩定生產", "C. 建立採購合約", "D. 完成ISO認證"], "ans": "B", "expl": "PPAP：在量產前，以實際製程條件製作樣品並驗證（尺寸/材料/功能/製程能力），確認量產準備就緒。"}, {"n": 192, "q": "First Article Inspection（FAI，首件檢驗）主要驗證的是？", "opts": ["A. 量產中的統計製程能力", "B. 製程設定、工具與夾具是否能生產出符合設計要求的零件", "C. 作業員培訓成效", "D. 供應商財務狀況"], "ans": "B", "expl": "FAI=首次生產或工程變更後，全面確認工裝/夾具/製程設定正確，並驗證產品符合所有圖面要求。"}, {"n": 193, "q": "可追溯性（Traceability）在製造業中的意義是？", "opts": ["A. GPS追蹤貨物位置", "B. 識別產品歷史（材料批號、製程參數、日期、作業員）的能力", "C. 網路連接能力", "D. 客戶資料庫存取"], "ans": "B", "expl": "追溯性：能查出「誰、何時、用什麼材料、在哪機台生產」，用於問題溯源、召回範圍確認。"}, {"n": 194, "q": "製程中「特殊原因（Special Cause）」變異的特點是？", "opts": ["A. 固有的隨機變異，無法消除", "B. 可識別且可消除的非隨機變異，通常由具體原因（人員/設備/材料）引起", "C. 製程自然變異的組成部分", "D. 管制界限內的變異"], "ans": "B", "expl": "特殊原因=可歸因的系統性變異（如換班、換料批、設備異常）→需調查消除；普通原因=系統固有隨機性。"}, {"n": 195, "q": "「防錯法（Poka-Yoke）警告型（Warning Type）」與「控制型（Control Type）」的差異是？", "opts": ["A. 控制型發出警報，警告型直接阻止錯誤", "B. 警告型發出警報提醒但不阻止；控制型直接阻止錯誤繼續", "C. 兩者功能相同", "D. 控制型成本更低"], "ans": "B", "expl": "警告型（Warning）=燈號/警鈴，需人員回應；控制型（Control）=強制阻止，如設計上的止檔、鎖具。"}, {"n": 196, "q": "在製程中，「工程變更（ECN/ECR）」的主要管控要點是？", "opts": ["A. 無需通知顧客", "B. 評估影響、更新相關文件、重新PPAP確認（若需要）、顧客通知", "C. 只需更新作業指導書", "D. 直接實施，事後報告"], "ans": "B", "expl": "ECN管控：影響評估（FMEA、管制計畫）→文件更新（圖面、SOP）→驗證確認→顧客通知→PPAP（依需要）。"}, {"n": 197, "q": "「功能測試（Functional Test）」與「外觀/尺寸檢驗」最主要的差異是？", "opts": ["A. 功能測試較不重要", "B. 功能測試確認產品在實際使用條件下的性能表現", "C. 外觀檢驗更全面", "D. 兩者測試方法相同"], "ans": "B", "expl": "尺寸/外觀=靜態符合性確認；功能測試=動態實際使用性能驗證；高可靠性產品兩者都需要。"}, {"n": 198, "q": "ISO 9001:2015 條款 8.7「不符合產品的管制」要求？", "opts": ["A. 立即報廢所有不合格品", "B. 識別、隔離，並進行文件化的處置（報廢/重工/讓步/退回）", "C. 只需通知顧客", "D. 自動降級使用"], "ans": "B", "expl": "8.7要求：識別不合格→隔離→評估影響→文件化處置決定→必要時通知顧客；所有不合格需有記錄。"}, {"n": 199, "q": "「讓步接收（Use-As-Is）」不合格品的核准需要？", "opts": ["A. 班組長口頭同意", "B. 工程或顧客書面批准（Concession/Deviation）", "C. 不需文件", "D. 品質部門單獨決定"], "ans": "B", "expl": "讓步接收：非標準處置，必須有工程評估確認無功能/安全影響，顧客要求者需顧客書面批准。"}, {"n": 200, "q": "SCAR（Supplier Corrective Action Request，供應商矯正措施要求）發出時機是？", "opts": ["A. 供應商提早交貨", "B. 供應商造成品質逃出（Quality Escape）或系統性缺陷", "C. 供應商申請漲價", "D. 認證新供應商時"], "ans": "B", "expl": "SCAR=要求供應商對已確認的品質問題進行根本原因分析並提出永久矯正措施（通常含8D報告）。"}, {"n": 201, "q": "MTBF（平均故障間隔時間）適用於哪類系統？", "opts": ["A. 不可維修的一次性零件", "B. 可維修系統（修復後可重新使用）", "C. 只適用電子元件", "D. 只適用機械設備"], "ans": "B", "expl": "MTBF=可維修系統兩次故障間的平均使用時間；MTTF（Mean Time to Failure）=不可維修元件的失效前時間。"}, {"n": 202, "q": "可靠度工程「浴缸曲線（Bathtub Curve）」的三個階段正確描述是？", "opts": ["A. 遞增→固定→遞減", "B. 遞減（早期故障）→固定（隨機故障）→遞增（磨耗故障）", "C. 固定→遞增→遞減", "D. 全程遞增"], "ans": "B", "expl": "浴缸曲線三期：①初期故障期（降低）=Burn-in；②偶發故障期（固定）=正常使用；③磨耗期（上升）=老化磨損。"}, {"n": 203, "q": "兩個串聯（Series）元件可靠度 R₁=0.95，R₂=0.90，系統可靠度為？", "opts": ["A. 0.855", "B. 0.950", "C. 0.975", "D. 0.900"], "ans": "A", "expl": "串聯系統：R_sys = R₁ × R₂ = 0.95 × 0.90 = 0.855；串聯使系統可靠度低於最低的元件可靠度。"}, {"n": 204, "q": "兩個並聯（Parallel/Redundant）元件 R₁=R₂=0.90，系統可靠度為？", "opts": ["A. 0.81", "B. 0.90", "C. 0.99", "D. 0.95"], "ans": "C", "expl": "並聯系統：R_sys = 1-(1-R₁)(1-R₂)=1-0.1×0.1=0.99；並聯提供冗餘，提升系統可靠度。"}, {"n": 205, "q": "「加速壽命試驗（ALT，Accelerated Life Testing）」的目的是？", "opts": ["A. 加快生產速度", "B. 在較高應力下快速取得壽命資料，推估正常使用條件下的壽命", "C. 減少樣本數", "D. 取代環境試驗"], "ans": "B", "expl": "ALT：用高溫/高電壓/高振動加速老化，以短時間得到長期壽命數據；用模型（如Arrhenius）外推至正常條件。"}, {"n": 206, "q": "可靠度函數 R(t) 與累積失效函數 F(t) 的關係是？", "opts": ["A. R(t) = F(t)", "B. R(t) = 1 - F(t)", "C. R(t) = F(t)²", "D. R(t) + F(t) = 2"], "ans": "B", "expl": "R(t)=生存到時間t的機率；F(t)=在t之前失效的機率；兩者互補，R(t)+F(t)=1。"}, {"n": 207, "q": "指數分配失效率 λ=0.01/hr，則 MTTF = ？", "opts": ["A. 0.01 hr", "B. 100 hr", "C. 10 hr", "D. 1000 hr"], "ans": "B", "expl": "指數分配：MTTF = 1/λ = 1/0.01 = 100 hr；指數分配的MTTF和MTBF均等於1/λ。"}, {"n": 208, "q": "系統設計中，「冗餘（Redundancy）」的目的是？", "opts": ["A. 降低單元成本", "B. 透過備援元件提升系統可靠度", "C. 提升產品性能", "D. 減少零件數目"], "ans": "B", "expl": "冗餘=並聯備援設計，即使主元件故障，備援仍可運作→系統可靠度提升（並聯系統R>單元R）。"}, {"n": 209, "q": "「可用性（Availability，A）」的計算公式是？", "opts": ["A. MTBF / MTTF", "B. MTBF / (MTBF + MTTR)", "C. 1 - MTTR", "D. MTTF × λ"], "ans": "B", "expl": "A = MTBF/(MTBF+MTTR)；MTTR=平均維修時間（Mean Time To Repair）；A高=故障間隔長且維修快。"}, {"n": 210, "q": "「故障樹分析（FTA，Fault Tree Analysis）」是？", "opts": ["A. 由下至上的故障分析（Bottom-Up）", "B. 由頂部不期望事件向下展開，找出導致頂部事件的各種組合（Top-Down/演繹法）", "C. SPC管制工具", "D. 品質成本分析"], "ans": "B", "expl": "FTA：定義頂部事件→用邏輯閘（AND/OR）展開各失效組合→計算系統失效機率；是演繹/定量工具。"}, {"n": 211, "q": "「5 個為什麼（5 Whys）」根本原因分析法，源自哪個體系？", "opts": ["A. 六標準差（GE/Motorola）", "B. 豐田生產系統（Toyota Production System）", "C. ISO 9001", "D. 品質成本管理"], "ans": "B", "expl": "5 Whys由大野耐一在豐田開發，透過連問5次「為什麼」找到根本原因，是精實生產的問題解決工具。"}, {"n": 212, "q": "8D 問題解決法中，「D3（暫時圍堵措施）」的目的是？", "opts": ["A. 找到根本原因", "B. 在根本原因確認前，立即保護顧客不受問題繼續影響", "C. 實施永久矯正措施", "D. 預防問題再次發生"], "ans": "B", "expl": "D3=ICA（Interim Containment Action）：緊急措施保護顧客；例如加強檢驗、隔離疑似品、出貨暫停。"}, {"n": 213, "q": "「價值流圖（VSM，Value Stream Mapping）」的主要用途是？", "opts": ["A. 繪製品質管制圖", "B. 視覺化物料與資訊流動，識別浪費並設計未來改善狀態", "C. 分析製程能力", "D. 建立供應商評鑑矩陣"], "ans": "B", "expl": "VSM=精實工具，繪製「當前狀態圖」找出浪費（等待/庫存/多餘動作），設計「未來狀態圖」改善方向。"}, {"n": 214, "q": "「基準標竿（Benchmarking）」在品質管理中指的是？", "opts": ["A. 設定量測基準點", "B. 與業界最佳實踐者比較，找出差距並學習改善", "C. 校正量具的標準", "D. 設定生產目標"], "ans": "B", "expl": "Benchmarking：找標竿組織→比較關鍵指標→識別差距→學習採用最佳實踐；分內部/競爭者/跨業標竿。"}, {"n": 215, "q": "精實生產中「七大浪費（7 Muda）」不包含哪項？", "opts": ["A. 過度生產（Overproduction）", "B. 等待（Waiting）", "C. 持續改善（Kaizen）", "D. 庫存（Inventory）"], "ans": "C", "expl": "7大浪費：過度生產、等待、搬運、過度加工、庫存、動作、缺陷；Kaizen是消除浪費的方法，不是浪費本身。"}, {"n": 216, "q": "「DMADV」（設計六標準差，DFSS）與 DMAIC 的差異是？", "opts": ["A. 兩者完全相同", "B. DMADV 用於設計全新產品/製程，DMAIC 用於改善既有製程", "C. DMADV 只用於軟體開發", "D. DMAIC 用於新產品設計"], "ans": "B", "expl": "DMAIC=Define-Measure-Analyze-Improve-Control（改善）；DMADV=Define-Measure-Analyze-Design-Verify（新設計）。"}, {"n": 217, "q": "「實驗設計（DOE）」中，「主效應（Main Effect）」是指？", "opts": ["A. 兩因子交互作用的效果", "B. 單一因子從低水準到高水準，對響應變數造成的平均效應", "C. 實驗誤差", "D. 中心點的重複測量"], "ans": "B", "expl": "主效應=某因子的高低水準對Y的平均影響；交互作用=某因子的效應隨另一因子水準而改變。"}, {"n": 218, "q": "「Kaizen（改善）」的核心理念是？", "opts": ["A. 大規模變革，一次到位", "B. 全員參與的持續漸進式小改善，每天比昨天更好", "C. 只由管理階層推動改善", "D. 以自動化取代人工"], "ans": "B", "expl": "Kaizen（日文：改善=好的變化）：小步驟、持續、全員參與；不同於西方式大規模變革（Innovation）。"}, {"n": 219, "q": "以下哪個是最佳的「防錯（Poka-Yoke）」設計範例？", "opts": ["A. 增加最終品質檢驗頻率", "B. USB 插座設計成只能單一方向插入，防止反向插入損壞", "C. 要求作業員更仔細操作", "D. 加設品質告示牌"], "ans": "B", "expl": "最佳Poka-Yoke=設計上完全消除錯誤（控制型）；增加檢驗是品質鑑定，不是防錯；告示牌效果有限。"}, {"n": 220, "q": "「Genchi Genbutsu（現地現物）」的理念是？", "opts": ["A. 依靠數據報告做決策", "B. 親自到現場（Gemba）觀察實際情況，再做決策", "C. 電腦模擬製程", "D. 委派部屬處理現場問題"], "ans": "B", "expl": "現地現物：豐田文化，管理者需親到現場（Gemba=真實工作場所）直接觀察問題，不依賴二手資訊。"}, {"n": 221, "q": "「SIPOC 圖」中，各字母代表的元素正確的是？", "opts": ["A. System, Inspection, Process, Output, Customer", "B. Supplier, Input, Process, Output, Customer", "C. Statistical, Inspection, Performance, Operations, Control", "D. Supply, Inventory, Process, Order, Customer"], "ans": "B", "expl": "SIPOC：Supplier（供應者）→Input（輸入）→Process（製程）→Output（輸出）→Customer（顧客），是宏觀製程圖。"}, {"n": 222, "q": "「田口雜訊（Noise Factors）」在穩健設計中是指？", "opts": ["A. 可在設計中控制的因子", "B. 難以控制或成本高昂無法控制的因子（環境變化、使用者差異、磨耗）", "C. 製程中的隨機誤差", "D. 量測系統的誤差"], "ans": "B", "expl": "田口：信號因子（可控）用於優化；雜訊因子（不可控）=客戶使用環境差異/製造變異；目標是使產品對雜訊不敏感。"}, {"n": 223, "q": "「全面預防保養（TPM，Total Productive Maintenance）」的核心目標是？", "opts": ["A. 外包所有維修工作", "B. 消除設備六大損失（故障、設置調整、小停機、速度損失、初期不良、降低品質）", "C. 只由維修部門負責設備", "D. 縮短產品設計週期"], "ans": "B", "expl": "TPM：操作員參與日常保養（自主保養），搭配計畫保養，消除OEE（設備總合效能）的六大損失。"}, {"n": 224, "q": "全因子實驗設計（Full Factorial DOE）2因子各2水準，共需幾次實驗？", "opts": ["A. 2", "B. 4", "C. 8", "D. 16"], "ans": "B", "expl": "2²=4次實驗（A低B低、A低B高、A高B低、A高B高）；3因子=2³=8次；4因子=2⁴=16次。"}, {"n": 225, "q": "「OEE（Overall Equipment Effectiveness，設備總合效能）」的計算公式是？", "opts": ["A. 可用率 × 性能率 × 品質率", "B. 產量 / 計畫產量", "C. 實際速度 / 理論速度", "D. MTBF / (MTBF + MTTR)"], "ans": "A", "expl": "OEE = 可用率（Availability）×性能率（Performance）×品質率（Quality）；OEE>85%=世界級水準。"}, {"n": 226, "q": "「歸零（Zero Defects）」概念由哪位品質大師提出？", "opts": ["A. 戴明（Deming）", "B. 朱蘭（Juran）", "C. 克勞斯比（Crosby）", "D. 石川馨（Ishikawa）"], "ans": "C", "expl": "Philip Crosby在《品質免費（Quality is Free）》中提出零缺陷哲學：「第一次就做對」，品質是免費的。"}, {"n": 227, "q": "「顧客之聲（VOC，Voice of Customer）」收集方法「不」包含哪項？", "opts": ["A. 顧客訪談與問卷調查", "B. 保固申訴分析", "C. 量具校正記錄", "D. 焦點團體（Focus Group）"], "ans": "C", "expl": "VOC收集：訪談/問卷、客訴分析、焦點團體、現場觀察、競品分析；量具校正是MSA，與VOC無關。"}, {"n": 228, "q": "「作業指導書（SOP/WI，Work Instruction）」屬於文件層次中的第幾層？", "opts": ["A. 第一層（品質手冊）", "B. 第二層（程序書）", "C. 第三層（作業指導書）", "D. 第四層（表單/記錄）"], "ans": "C", "expl": "文件層次：L1=品質手冊（Why）；L2=程序書（What/Who）；L3=作業指導書（How，步驟細節）；L4=表單記錄。"}, {"n": 229, "q": "「校正（Calibration）」的定義是？", "opts": ["A. 調整量具至正確位置", "B. 在規定條件下，確定量具示值與標準值之間關係的一組操作", "C. 清潔和維護量具", "D. 取得量具的使用許可"], "ans": "B", "expl": "校正≠調整；校正=比對（量具值vs標準值）、記錄偏差；調整=修正偏差（校正後才決定是否調整）。"}, {"n": 230, "q": "稽核中「觀察項（Observation）」vs「不符合事項（Nonconformance/Finding）」的差異是？", "opts": ["A. 兩者相同，只是名稱不同", "B. 觀察=潛在改善機會（非嚴重）；不符合=已確認違反標準要求（有客觀證據）", "C. 觀察比不符合更嚴重", "D. 不符合是非正式意見"], "ans": "B", "expl": "NC（不符合）：客觀證據顯示違反要求，需矯正；Observation：稽核員注意到潛在風險，非強制改善。"}, {"n": 231, "q": "「防錯（Error Proofing）」依錯誤發生來源，分類正確的是？", "opts": ["A. 人為錯誤與設備故障", "B. 遺忘、誤解、辨識錯誤、初學者錯誤、疏忽等多種人為錯誤類型", "C. 只有操作員錯誤", "D. 只考慮設備失效"], "ans": "B", "expl": "Shingo分類人為錯誤：遺忘/誤解/辨識錯誤/初學/無意/疏忽/刻意/慢/無標準；Poka-Yoke針對消除這些根源。"}, {"n": 232, "q": "ISO 9001:2015 條款 7.5「文件化資訊」中，「保存（Retain）」與「維持（Maintain）」的差異是？", "opts": ["A. 兩者無差異", "B. 「維持」指現行文件（程序、作業指導書）；「保存」指歷史記錄（數據、檢驗報告）", "C. 保存比維持更重要", "D. 維持只適用於電子文件"], "ans": "B", "expl": "Maintain(維持)=程序文件，持續更新使用；Retain(保存)=品質記錄，留存以展示符合性；ISO明確區分。"}, {"n": 233, "q": "「統計公差（Statistical Tolerancing，RSS法）」相比最差情況法（Worst Case）的好處是？", "opts": ["A. 比最差情況法更保守", "B. 允許各零件公差較大（組裝後尺寸仍可在目標內），降低製造成本", "C. 不需要任何假設", "D. 需要100%檢驗"], "ans": "B", "expl": "RSS（Root Sum of Squares）：假設各零件尺寸獨立，組裝後公差=√(Σσᵢ²)；結果比Worst Case法寬鬆，但有一定風險。"}, {"n": 234, "q": "「PDCA 與 SDCA」在製程管理中的關係是？", "opts": ["A. 兩者完全相同", "B. PDCA=改善循環；SDCA=標準化→執行→查核→處置，用於維持已改善的成果", "C. SDCA 用於研發，PDCA 用於製程", "D. PDCA 在 SDCA 之後執行"], "ans": "B", "expl": "SDCA（Standardize-Do-Check-Act）：先標準化維持現狀，再用PDCA突破改善；改善後PDCA成果納入新SDCA。"}, {"n": 235, "q": "「顧客滿意度（CSAT）調查」最常用的量表是？", "opts": ["A. Likert 量表（1~5或1~7分評分）", "B. 二項式（是/否）", "C. 連續刻度尺", "D. 名目尺度"], "ans": "A", "expl": "Likert量表（如非常不滿意→非常滿意）最常用於CSAT調查；NPS（淨推薦分數）則用0~10分。"}, {"n": 236, "q": "「移動平均（Moving Average, MA）管制圖」相比X圖的優點是？", "opts": ["A. 能更快偵測大幅突發偏移", "B. 平滑化隨機變動，對小而持續的均值偏移更敏感", "C. 計算更簡單", "D. 適用於計數型資料"], "ans": "B", "expl": "MA圖：對過去n點加權平均，減少隨機波動，適合偵測緩慢趨勢；缺點是加入新點就去除最老點（等權）。"}, {"n": 237, "q": "「多變量管制圖（Hotelling T²圖）」的使用時機是？", "opts": ["A. 各品質特性完全獨立，分別監控", "B. 多個品質特性相互關聯，需同時監控所有特性的聯合狀態", "C. 只有計數型資料", "D. 只監控單一特性"], "ans": "B", "expl": "T²圖：多維度管制，考慮特性間的相關性；若多特性各自在管制內，但聯合狀態可能不正常，T²能偵測到。"}, {"n": 238, "q": "預管制（Pre-Control）方法的「綠區（Green Zone）」定義為？", "opts": ["A. 超出規格界限的區域", "B. 規格中間 50% 的區域（±25% 規格寬範圍內）", "C. ±3σ 管制界限內", "D. 所有量測值範圍"], "ans": "B", "expl": "Pre-Control分區：綠區=中間50%（目標值附近）；黃區=上下各25%；紅區=超出規格；簡單但需連續5點在綠區才可生產。"}, {"n": 239, "q": "「非線性管制圖（Non-Linear Control Chart）」如 Box-Cox 轉換的目的是？", "opts": ["A. 讓管制圖看起來更美觀", "B. 將偏態或非常態資料轉換為接近常態的分配，使標準Shewhart圖有效", "C. 擴大管制界限", "D. 只用於計數型資料"], "ans": "B", "expl": "Box-Cox轉換：y'=yλ（λ由最大概似法估計），使轉換後資料接近常態，再建立管制圖。"}, {"n": 240, "q": "管制界限（UCL/LCL）需要「重新計算」的情境是？", "opts": ["A. 每月固定重新計算", "B. 製程發生根本性變更（新設備、新原料、製程重設計）後", "C. 發現任何一點超出管制界限", "D. 每隔10組子群"], "ans": "B", "expl": "管制界限應反映當前製程的固有變異；製程根本改變後需重建基準；非每次異常都需重算（先移除特殊原因後再計算）。"}, {"n": 241, "q": "量具「校正追溯性（Calibration Traceability）」的最終源頭是？", "opts": ["A. 設備製造商的出廠校正", "B. 國家計量標準（如NIST）或國際SI單位制", "C. 顧客提供的標準件", "D. ISO認證機構"], "ans": "B", "expl": "追溯鏈：工廠量具→工廠標準件→國家計量標準（如NML台灣、NIST美國）→國際SI單位制；確保全球一致性。"}, {"n": 242, "q": "「量具解析度（Gauge Resolution）」不足的後果是？", "opts": ["A. 量測時間增加", "B. 量測值只能跳躍式變動，無法分辨細微差異，導致 GR&R 結果失真", "C. 校正周期縮短", "D. 操作員需要更多培訓"], "ans": "B", "expl": "解析度不足（如刻度太大）：量測值只能以固定間距跳動，數據呈階梯狀，GR&R重複性虛低，判斷失準。"}, {"n": 243, "q": "量測「精確度（Accuracy）」vs「精密度（Precision）」的正確配對是？", "opts": ["A. 精確度=散布小；精密度=靠近真值", "B. 精確度=靠近真值（低偏差）；精密度=散布小（高重複性）", "C. 兩者定義相同", "D. 精密度由Cpk決定"], "ans": "B", "expl": "Accuracy=與真值的接近程度（靠近靶心）；Precision=重複量測的散布（射擊集中）；射擊比喻最直觀。"}, {"n": 244, "q": "量測不確定度（Measurement Uncertainty）的「擴充不確定度（U）」通常以涵蓋因子 k=2 計算，代表約？", "opts": ["A. 68% 信賴水準", "B. 95% 信賴水準", "C. 99% 信賴水準", "D. 50% 信賴水準"], "ans": "B", "expl": "k=2（約±2σ）→涵蓋機率≈95%；k=3（±3σ）→≈99.7%；k=1（±1σ）→≈68%；量測報告常用k=2，U=k×u_c。"}, {"n": 245, "q": "「外部失敗成本（External Failure Cost）」包含哪些項目？", "opts": ["A. 預防培訓費用", "B. 進料檢驗費", "C. 客戶保固維修、退貨處理、產品召回", "D. 製程內重工費用"], "ans": "C", "expl": "外部失敗=產品出廠後的問題：保固、退貨、召回、訴訟、商譽損失；內部失敗=出廠前：報廢、重工、再驗。"}, {"n": 246, "q": "品質成本「傳統最適點理論」認為，最低總成本發生在？", "opts": ["A. 預防成本最大化時", "B. 失敗成本等於預防加鑑定成本時的均衡點", "C. 鑑定成本最小化時", "D. 不良率=0%時"], "ans": "B", "expl": "傳統理論：增加預防→失敗↓但預防成本↑；最適點=邊際預防收益=邊際預防成本；但現代觀點質疑此平衡點。"}, {"n": 247, "q": "「隱藏工廠（Hidden Factory）」指的是？", "opts": ["A. 地下製造廠房", "B. 組織內用於重工、再檢、修正等非增值活動所消耗的資源與時間", "C. 加班生產的數量", "D. 外包的生產作業"], "ans": "B", "expl": "Hidden Factory：無形的「第二生產線」，用來修補不符合品質，是COPQ的核心概念，必須找出並消除。"}, {"n": 248, "q": "「不良品質成本（COPQ，Cost of Poor Quality）」主要由哪兩類構成？", "opts": ["A. 預防成本 + 鑑定成本", "B. 內部失敗成本 + 外部失敗成本", "C. 所有四類品質成本", "D. 鑑定成本 + 外部失敗成本"], "ans": "B", "expl": "COPQ=內部失敗（報廢/重工）+外部失敗（退貨/保固/召回）；預防和鑑定成本是「品質投資」，非COPQ。"}, {"n": 249, "q": "持續改善（CI）活動的量化成效最好用哪個指標衡量？", "opts": ["A. 員工滿意度", "B. COPQ 降低率、不良率改善、Cpk 提升、週期時間縮短等量化指標", "C. 改善活動次數", "D. 培訓課時數"], "ans": "B", "expl": "改善成效必須量化：COPQ降低（$）、PPM改善、Cpk提升、RTY↑、Lead time↓；才能計算ROI並持續推動。"}, {"n": 250, "q": "ISO 9001:2015 以「風險思維」取代了2008版的哪個強制要求？", "opts": ["A. 管理審查", "B. 預防措施（Preventive Action）條款", "C. 內部稽核", "D. 顧客溝通"], "ans": "B", "expl": "2008版有明確「預防措施（8.5.3）」條款；2015版改為在整個系統中融入「風險思維（6.1）」，更主動且系統化。"}, {"n": 251, "q": "「名目群體技術（Nominal Group Technique）」在品質改善中用於？", "opts": ["A. 計算製程能力", "B. 結構化投票來優先排列問題/原因，避免少數人主導討論", "C. 繪製製程圖", "D. 分析散佈圖"], "ans": "B", "expl": "NGT：每人先獨立列出構想→分享→投票排序；減少從眾效應，確保所有人意見被納入；常用於根因優先化。"}, {"n": 252, "q": "「方針管理（Hoshin Kanri）」的主要特色是？", "opts": ["A. 只關注短期財務目標", "B. 將組織長期策略目標層層展開到各單位，並透過PDCA驗證執行", "C. 以自動化取代人工管理", "D. 純粹由外部顧問推動"], "ans": "B", "expl": "Hoshin Kanri（政策展開）：從董事會→高階管理→中階→基層，X矩陣串聯目標與手段，「球」（Catchball）溝通一致。"}, {"n": 253, "q": "「統計顯著性（Statistical Significance）」在假設檢定的含義是？", "opts": ["A. 效應量（Effect Size）大，具實際重要性", "B. 觀測結果在 H₀ 為真時出現的機率<α，足以拒絕虛無假設", "C. 樣本數已足夠", "D. 結果一定具有實務重要性"], "ans": "B", "expl": "統計顯著≠實務重要；p<α=拒絕H₀（統計顯著）；效應量小但n很大也可達顯著；實務重要性需另外評估。"}, {"n": 254, "q": "「玄場走訪（Gemba Walk）」在精實製造中的意義是？", "opts": ["A. 用電腦模擬生產流程", "B. 管理者親赴實際工作場所觀察製程，以深入了解並支持改善", "C. 供應商現場稽核", "D. 設備預防保養巡檢"], "ans": "B", "expl": "Gemba=日文「現場」；Gemba Walk：領導者帶目的去觀察（不是問罪）→找到浪費→支持解決問題。"}, {"n": 255, "q": "「計量值資料（Variable Data）」相比「計數值資料（Attribute Data）」的優點是？", "opts": ["A. 較易收集，不需量測工具", "B. 提供更多資訊（大小/方向），相同保護下所需樣本數更少", "C. 不受製程分配影響", "D. 適用於所有類型的特性"], "ans": "B", "expl": "計量值（如尺寸mm）：每個數值攜帶完整資訊；計數值（合格/不合格）：資訊較少，需更大樣本才能達同等統計效力。"}, {"n": 256, "q": "「控制圖的 3σ 管制界限」選擇 ±3σ 而非 ±2σ 的主要理由是？", "opts": ["A. 3σ 是數學上唯一正確的界限", "B. 平衡兩類錯誤：α（假警報）與 β（漏偵）的最佳折衷點", "C. ISO 標準強制規定", "D. ±2σ 界限太寬"], "ans": "B", "expl": "±3σ：假警報率α≈0.27%（夠低，不干擾生產）；若±2σ則α≈4.55%，過多假警報；休哈特選3σ是實務權衡。"}, {"n": 257, "q": "「CONC（Cost of Non-Conformance，不符合成本）」等同於品質成本分類中的？", "opts": ["A. 預防成本", "B. 鑑定成本", "C. 失敗成本（內部+外部）", "D. 全部品質成本"], "ans": "C", "expl": "CONC=不符合的代價=失敗成本（報廢/重工/退貨/保固）；COC（Cost of Conformance）=預防+鑑定成本。"}, {"n": 258, "q": "「流程方法（Process Approach）」在 ISO 9001:2015 中的意義是？", "opts": ["A. 只重視最終產品", "B. 將組織視為相互關聯的流程系統，管理輸入、輸出、互動及整體效果", "C. 各部門獨立運作", "D. 以顧客為唯一關注點"], "ans": "B", "expl": "流程方法：識別組織流程→管理輸入/輸出/資源→監控整個流程網絡；7大原則之一，強調系統整合視角。"}, {"n": 259, "q": "「計數值資料（Attribute Data）」的例子是？", "opts": ["A. 軸承直徑（mm）", "B. 表面粗糙度 Ra 值（μm）", "C. 每批中不良品的數量（件數）", "D. 扭力值（N·m）"], "ans": "C", "expl": "計數值=整數計數（合格/不合格、缺陷數）；計量值=連續量測數值（mm、kg、N·m）；兩者選用不同管制圖。"}, {"n": 260, "q": "田口「穩健設計（Robust Design）」的目標是？", "opts": ["A. 消除所有雜訊因子", "B. 最大化產品對不可控雜訊因子（環境/磨耗/使用差異）的不敏感性，使品質穩定", "C. 嚴格控制所有製程參數", "D. 增加產品的功能複雜度"], "ans": "B", "expl": "田口哲學：不是消除雜訊（不可能/昂貴），而是找到使信噪比最大的設計參數組合，讓產品對雜訊免疫。"},
+{"n": 301, "q": "GD&T 中「真圓度（Circularity/Roundness）」符號是？", "opts": ["A. ○（圓形）", "B. ◎（同心圓）", "C. ⊙", "D. 圓弧形"], "ans": "A", "expl": "真圓度符號=圓形○；◎=同軸度；⊙=位置度；真圓度限制截面輪廓與理想圓的偏差量。"},
+{"n": 302, "q": "GD&T 中「最大實體條件（MMC, Maximum Material Condition）」符號為？", "opts": ["A. Ⓛ", "B. Ⓢ", "C. Ⓜ", "D. Ⓟ"], "ans": "C", "expl": "MMC=Ⓜ，外部特徵（軸）尺寸最大或內部特徵（孔）尺寸最小；LMC=Ⓛ；RFS=Ⓢ（無修飾符預設）。"},
+{"n": 303, "q": "「位置度（Position Tolerance）」公差帶在 GD&T 中通常是什麼形狀？", "opts": ["A. 兩平行線之間的帶狀", "B. 圓柱形（3D）或圓形（2D）區域", "C. 正方形區域", "D. 球形區域"], "ans": "B", "expl": "位置度公差帶=圓柱體（3D孔位）或圓形（2D），以理想位置為中心；比正方形公差帶多約57%面積。"},
+{"n": 304, "q": "「平面度（Flatness）」公差控制的是？", "opts": ["A. 兩平行平面間的距離", "B. 一個表面的所有點必須在兩條平行平面之間（與基準無關）", "C. 相對於基準的高度", "D. 表面粗糙度"], "ans": "B", "expl": "平面度=獨立控制（不參照基準）；平行度=相對基準的平行關係；兩者概念不同。"},
+{"n": 305, "q": "「垂直度（Perpendicularity）」GD&T 公差帶的形狀（軸的垂直度）是？", "opts": ["A. 兩平行線", "B. 圓柱體", "C. 球形", "D. 正方形"], "ans": "B", "expl": "軸的垂直度（到基準平面）：公差帶=以理想垂直軸為中心的圓柱體，直徑=公差值。"},
+{"n": 306, "q": "GD&T 中「基準特徵（Datum Feature）」的作用是？", "opts": ["A. 限制特徵的尺寸", "B. 提供用於量測其他特徵的理論精確參考平面/軸/點", "C. 設定表面粗糙度要求", "D. 指定材料硬度"], "ans": "B", "expl": "Datum Feature=製造或檢驗時用來建立座標系的實際物理特徵；對應的Datum=理論幾何參考框架。"},
+{"n": 307, "q": "「真位置（True Position）」的計算公式是？", "opts": ["A. √(ΔX² + ΔY²)", "B. 2√(ΔX² + ΔY²)", "C. ΔX + ΔY", "D. √(ΔX + ΔY)"], "ans": "B", "expl": "真位置偏差量=2√(ΔX²+ΔY²)，因為位置度公差帶是直徑（以理想位置為圓心的圓），所以乘以2。"},
+{"n": 308, "q": "「跳動度（Runout）」中「全跳動（Total Runout）」與「圓跳動（Circular Runout）」的差異是？", "opts": ["A. 兩者完全相同", "B. 全跳動在整個旋轉面上量測；圓跳動僅在任一截面量測", "C. 圓跳動比全跳動更嚴格", "D. 全跳動只適用於平面"], "ans": "B", "expl": "Circular Runout：各截面分別量測；Total Runout：零件旋轉並沿軸向移動，整面量測；全跳動控制更全面。"},
+{"n": 309, "q": "「包容原則（Rule #1，Taylor's Principle）」在 GD&T（ASME Y14.5）中規定？", "opts": ["A. 所有特徵均適用MMC修飾符", "B. 單一特徵在MMC時，必須完全通過理想形狀的量規（Perfect Form at MMC）", "C. 最小實體條件適用於所有孔", "D. 公差帶必須是圓形"], "ans": "B", "expl": "Rule #1：個別尺寸要素在MMC（最大料）時，其形狀必須完美（無形狀誤差）；這稱為「Taylor's Principle」。"},
+{"n": 310, "q": "「表面粗糙度（Surface Roughness）Ra」的定義是？", "opts": ["A. 量測長度內最高峰與最深谷的差", "B. 量測長度內輪廓與中心線偏差絕對值的算術平均", "C. 最高5個峰與5個谷的平均", "D. RMS（均方根）粗糙度"], "ans": "B", "expl": "Ra=算術平均粗糙度，最常用；Rz=最高峰谷差；Rq/RMS=均方根粗糙度；Ra計算簡單、應用廣。"},
+{"n": 311, "q": "三次元量測機（CMM, Coordinate Measuring Machine）使用的探頭（Probe）類型，最常見的是？", "opts": ["A. 雷射掃描探頭", "B. 觸發式探頭（Touch-Trigger Probe）", "C. 超音波探頭", "D. 影像感測探頭"], "ans": "B", "expl": "觸發式探頭（如Renishaw）：接觸工件時電訊觸發記錄座標；掃描式探頭持續接觸；雷射/影像為非接觸式。"},
+{"n": 312, "q": "「孔配件（Hole Basis System）」與「軸配件（Shaft Basis System）」的差異是？", "opts": ["A. 孔配件以孔為基準件；軸配件以軸為基準件", "B. 兩者無差異", "C. 孔配件只用於滑動配合", "D. 軸配件只用於過盈配合"], "ans": "A", "expl": "孔基準：孔公差固定，改變軸公差得到不同配合；軸基準：軸公差固定，改變孔公差；ISO使用孔基準為主。"},
+{"n": 313, "q": "「餘弦誤差（Cosine Error）」在量測中是指？", "opts": ["A. 量具刻度非線性導致的誤差", "B. 量具量測軸未與被量測特徵方向完全對齊，導致的系統性量測偏差", "C. 溫度變化導致的誤差", "D. 操作員視線偏差（視差）"], "ans": "B", "expl": "餘弦誤差：讀值≠實際值，因量具軸偏角θ時，誤差∝(1-cosθ)；對齊是量測的基本要求。"},
+{"n": 314, "q": "「阿貝原理（Abbe Principle）」在精密量測中指的是？", "opts": ["A. 量測力應盡量小", "B. 被量測尺寸的軸線與量具刻度軸線應在同一直線上，以消除量測誤差", "C. 量測速度應穩定", "D. 溫度應保持在20°C"], "ans": "B", "expl": "Abbe原理（First Principle）：量具的量測方向應與基準方向共線；不滿足時引入Abbe誤差（放大的角誤差）。"},
+{"n": 315, "q": "「平均粗糙度深度 Rz」相比 Ra 的特點是？", "opts": ["A. Rz 對高峰/深谷不敏感", "B. Rz 對極端峰谷值更敏感，常用於有功能要求（密封、疲勞強度）的表面", "C. Rz 永遠等於 Ra", "D. Rz 只用於粗加工"], "ans": "B", "expl": "Rz=最高5峰平均-最低5谷平均；對表面缺陷（刮傷、深谷）更敏感；Ra平均化會掩蓋極端值。"},
+{"n": 316, "q": "GD&T「形狀公差（Form Tolerance）」不需要？", "opts": ["A. 形狀公差帶", "B. 符號標注", "C. 基準（Datum）參考", "D. 公差數值"], "ans": "C", "expl": "形狀公差（真直度/真圓度/圓柱度/平面度）：控制特徵本身形狀，不與基準有關，故不需標示基準。"},
+{"n": 317, "q": "「量規（Gauge）設計的泰勒原則」規定：通端（GO gauge）應？", "opts": ["A. 為點接觸，只量測一個尺寸", "B. 為全形量規，能同時檢驗所有尺寸要素（實體量規）", "C. 比止端（NO-GO）更短", "D. 只適用於外徑量測"], "ans": "B", "expl": "Taylor原則：GO=全形量規（Full Form），能同時控制尺寸+形狀；NO-GO=點接觸，只量單一尺寸要素。"},
+{"n": 318, "q": "「表面波紋度（Waviness）」與「表面粗糙度（Roughness）」的主要差異是？", "opts": ["A. 兩者相同", "B. 波紋度波長較長（0.08-0.8mm以上），由振動/撓曲造成；粗糙度波長短，由加工刀具造成", "C. 粗糙度波長更長", "D. 波紋度只影響外觀，不影響功能"], "ans": "B", "expl": "表面輪廓分三層：粗糙度（短波，Ra評估）+波紋度（中波，Wa）+形狀誤差（長波）；功能設計需分別控制。"},
+{"n": 319, "q": "游標卡尺（Vernier Caliper）的最小讀值（解析度）通常是？", "opts": ["A. 0.001 mm", "B. 0.01 mm 或 0.02 mm", "C. 0.1 mm", "D. 0.001 in"], "ans": "B", "expl": "標準游標卡尺：分度值0.02mm（50格游標）或0.05mm（20格）；數位式可達0.01mm；分釐卡為0.001mm。"},
+{"n": 320, "q": "分釐卡（Micrometer）的分度值（解析度）通常是？", "opts": ["A. 0.1 mm", "B. 0.01 mm", "C. 0.001 mm", "D. 0.0001 mm"], "ans": "C", "expl": "標準分釐卡：0.001mm（1μm）；附加鼓輪（Vernier Micrometer）可讀0.001mm；電子式可達0.0001mm。"},
+{"n": 321, "q": "量表（Dial Gauge/Indicator）在量測中最主要用於？", "opts": ["A. 絕對尺寸量測（absolute measurement）", "B. 相對偏差量測（比較量測，如跳動、平面度、同軸度）", "C. 表面粗糙度量測", "D. 硬度量測"], "ans": "B", "expl": "量表=比較式量測儀器，最適合量測偏差（vs.基準）；不適合絕對尺寸（需搭配量塊）；解析度0.001或0.01mm。"},
+{"n": 322, "q": "「量塊（Gauge Block / Jo Block）」的主要用途是？", "opts": ["A. 量測孔徑", "B. 作為長度量測的基準，提供可追溯的精密長度標準", "C. 量測表面粗糙度", "D. 校正液體量測儀器"], "ans": "B", "expl": "量塊：精密長度基準，Grade K/0/1/2各有精度等級；可疊加使用；硬化鋼/陶瓷材質；追溯至國際米定義。"},
+{"n": 323, "q": "「氣動量儀（Air Gauge）」的主要優點是？", "opts": ["A. 可量測任何材質", "B. 非接觸量測，速度快，精度高，適合量測易變形軟性零件", "C. 操作最簡單", "D. 可量測長距離"], "ans": "B", "expl": "氣動量儀：利用空氣流速/背壓原理；非接觸式（不傷工件）；量測範圍小但精度高（0.1~1μm）。"},
+{"n": 324, "q": "使用分釐卡量測時，「棘輪（Ratchet）」的功能是？", "opts": ["A. 鎖定量測值", "B. 確保每次施加固定量測力（避免因施力不同造成偏差）", "C. 調整量測範圍", "D. 歸零校正"], "ans": "B", "expl": "棘輪限制施力：到達設定轉矩後空轉，確保每次量測力一致（通常約5-10N），避免因施力差異造成誤差。"},
+{"n": 325, "q": "「硬度計」中，「洛氏硬度（Rockwell）」使用什麼作為壓頭？", "opts": ["A. 鋼球（僅用鋼球）", "B. 金剛石圓錐（Brale）或鋼球，依用途選擇", "C. 維氏四角錐金剛石", "D. 鈹銅球"], "ans": "B", "expl": "洛氏：HRC用鋼（或金剛石圓錐；HRB用1/16\"鋼球；各Scale有不同壓頭和主荷重；快速、適合生產現場。"},
+{"n": 326, "q": "「光學比較儀（Optical Comparator / Profile Projector）」主要用於？", "opts": ["A. 量測表面粗糙度", "B. 將工件輪廓放大投影到屏幕，比對樣板或量測輪廓尺寸", "C. 量測材料化學成分", "D. 量測硬度"], "ans": "B", "expl": "輪廓投影機（Shadow Graph）：將工件影像放大（10X~100X）投影，用於齒輪、螺紋、刀具等複雜輪廓量測。"},
+{"n": 327, "q": "CMM（座標量測機）量測前，需先進行的「量測工件基準建立（Part Setup）」流程是？", "opts": ["A. 直接量測所有特徵", "B. 先量測基準特徵（平面、孔、邊）建立3-2-1定位關係，確立工件座標系", "C. 校正量具即可", "D. 依圖面順序量測"], "ans": "B", "expl": "3-2-1 Datum：3點定平面（Z）→2點定軸（X或Y）→1點定原點；建立工件座標系後才能準確量測各特徵。"},
+{"n": 328, "q": "「雷射干涉儀（Laser Interferometer）」在量測機台校正中主要用於？", "opts": ["A. 量測工件表面粗糙度", "B. 精密量測線性位移、直線度、直角度（nm~μm精度）", "C. 量測材料透光性", "D. 非接觸溫度量測"], "ans": "B", "expl": "雷射干涉儀利用光波干涉原理，精度達nm級，用於校正CMM、工具機直線度/定位精度/垂直度等。"},
+{"n": 329, "q": "「超音波探傷（UT, Ultrasonic Testing）」在非破壞性檢驗中，最適合偵測？", "opts": ["A. 表面裂縫", "B. 內部缺陷（如裂紋、夾雜、氣孔）", "C. 材料顏色差異", "D. 表面氧化層"], "ans": "B", "expl": "UT：超音波穿透材料，遇到內部缺陷時反射；適合金屬/複合材料內部缺陷；表面缺陷用PT/MT。"},
+{"n": 330, "q": "「磁粉探傷（MT, Magnetic Particle Testing）」的限制是？", "opts": ["A. 無法偵測表面缺陷", "B. 只能用於鐵磁性材料（如碳鋼、鑄鐵）", "C. 無法用於小零件", "D. 只能室外使用"], "ans": "B", "expl": "MT：利用磁場使磁粉集中在缺陷處；只對鐵磁性材料有效（不鏽鋼304、鋁、鈦無法使用）；表面/近表面缺陷。"},
+{"n": 331, "q": "「液滲探傷（PT, Penetrant Testing）」最適合檢測哪類缺陷？", "opts": ["A. 內部裂紋", "B. 開口於表面的裂縫、氣孔（表面缺陷）", "C. 次表面缺陷", "D. 材料成分"], "ans": "B", "expl": "PT：滲透液進入表面開口缺陷→顯像劑吸出著色，形成可見顯示；適用金屬、陶瓷、玻璃等；限表面開口缺陷。"},
+{"n": 332, "q": "「X 光射線探傷（RT, Radiographic Testing）」的主要缺點是？", "opts": ["A. 只能量測表面", "B. 輻射危害、成本高、需要人員防護與管制", "C. 無法偵測金屬缺陷", "D. 精度不夠"], "ans": "B", "expl": "RT：X光/γ射線穿透工件，缺陷使底片曝光差異顯影；優點=永久記錄；缺點=輻射危害、成本高、速度慢。"},
+{"n": 333, "q": "「渦流探傷（ET, Eddy Current Testing）」最常用於？", "opts": ["A. 木材缺陷偵測", "B. 導電材料（金屬）的表面及近表面裂縫偵測，以及厚度量測", "C. 複合材料內部缺陷", "D. 塑膠件缺陷"], "ans": "B", "expl": "渦流：交流電在探頭感應渦電流於導體，缺陷改變渦流分布→電阻抗變化偵測；非接觸、快速、適合管材/航太零件。"},
+{"n": 334, "q": "校正間隔（Calibration Interval）應根據什麼來決定？", "opts": ["A. 只根據製造商建議", "B. 量具使用頻率、使用條件、歷史校正結果（穩定性）、風險", "C. 固定每年一次", "D. 只根據ISO要求"], "ans": "B", "expl": "ISO/IEC 17025要求根據：使用頻率/環境、過去穩定性記錄、用途重要性（安全/精度）等動態調整校正間隔。"},
+{"n": 335, "q": "「校正標準（Calibration Standards）」的等級從高到低，正確順序是？", "opts": ["A. 工作標準→基準標準→傳遞標準→國際標準", "B. 國際標準（SI）→國家標準→傳遞標準（Transfer）→工作標準", "C. 工作標準→國家標準", "D. 所有等級相同"], "ans": "B", "expl": "校正追溯階層：國際SI→國家計量院（NIST等）→傳遞/參考標準→工作標準（現場量具）；每級精度遞減。"},
+{"n": 336, "q": "校正記錄應包含哪些最低限度的資訊？", "opts": ["A. 只需記錄Pass/Fail", "B. 量具編號、校正日期、校正人員、量測結果（數據）、下次校正日期", "C. 只需設備名稱", "D. 客戶名稱和合約編號"], "ans": "B", "expl": "ISO/IEC 17025要求校正報告：設備識別、環境條件、量測結果+不確定度、校正人員、日期、方法等。"},
+{"n": 337, "q": "當量具發現校正逾期（Over Due），正確的處置程序是？", "opts": ["A. 繼續使用至下次校正", "B. 立即停用，追溯評估自上次校正後的量測結果影響，通知受影響方", "C. 只需重新貼校正標籤", "D. 由操作員判斷是否可用"], "ans": "B", "expl": "逾期校正≠不合格；需判斷：期間量測結果是否受影響？若有影響需啟動矯正措施並通知受影響的顧客或生產批次。"},
+{"n": 338, "q": "「量測不確定度（Measurement Uncertainty）」必須在校正報告中提供的原因是？", "opts": ["A. 法規強制要求", "B. 量測結果沒有不確定度是不完整的，用戶無法判斷量測結果的可靠性", "C. 只是格式要求", "D. 為了計算成本"], "ans": "B", "expl": "ISO/IEC 17025：校正報告必須包含量測不確定度；無不確定度的量測結果無法與規格比較（是否在公差內）。"},
+{"n": 339, "q": "「量測設備管理（MTE, Measuring and Test Equipment）」系統的核心要求是？", "opts": ["A. 所有設備集中一個部門", "B. 量測設備的識別、校正狀態標示、儲存保護、使用中防護", "C. 所有設備用一家廠商", "D. 只保留最新型號設備"], "ans": "B", "expl": "MTE管理：唯一識別標記、校正有效期標示（標籤/系統）、適當儲存（避免損傷/環境影響）、使用中防護（不落摔）。"},
+{"n": 340, "q": "「偏差（Bias）」在量測系統中的意義，與哪個術語最接近？", "opts": ["A. 重複性（Repeatability）", "B. 系統性誤差（Systematic Error）/準確性（Accuracy）問題", "C. 隨機誤差", "D. 解析度"], "ans": "B", "expl": "Bias=量測均值與參考值（真值）的差=系統性誤差；重複性=隨機誤差；兩者都影響量測品質，需分別評估。"},
+{"n": 341, "q": "「防震（Anti-vibration）基座」在精密量測實驗室中的目的是？", "opts": ["A. 增加設備穩定性，防止外部振動影響量測精度", "B. 保護設備免於地震破壞", "C. 減少噪音", "D. 增加樓板承重"], "ans": "A", "expl": "精密量測（CMM、干涉儀）對振動非常敏感（nm~μm級量測）；隔振基座/光學平台隔離地板振動，確保量測穩定。"},
+{"n": 342, "q": "量具校正時，「環境條件」中最關鍵的因素通常是？", "opts": ["A. 照明強度", "B. 溫度（標準量測溫度=20°C/68°F）", "C. 濕度", "D. 噪音水準"], "ans": "B", "expl": "熱膨脹影響所有材料尺寸；ISO 1 規定標準量測溫度=20°C；鋼材α≈11.7×10⁻⁶/°C，1°C差異引起顯著誤差。"},
+{"n": 343, "q": "「量規磨損（Gauge Wear）」對 GO gauge 的影響是？", "opts": ["A. GO 量規因磨損而縮小，可能允收不合格件", "B. GO 量規因磨損而縮小，應更嚴格（可能拒收合格件）", "C. GO 量規磨損後不影響量測", "D. GO 量規只有過盈磨損"], "ans": "B", "expl": "外徑GO量規（Ring Gauge）磨損→內徑增大→可能允收超差軸；孔GO量規磨損→外徑縮小→可能拒收合格孔。設計應考慮磨損公差。"},
+{"n": 344, "q": "「環規（Ring Gauge）」用於量測什麼？", "opts": ["A. 孔徑", "B. 軸徑（外徑）", "C. 螺距", "D. 平面度"], "ans": "B", "expl": "Ring Gauge=量測外徑（軸）；Plug Gauge=量測孔徑（內徑）；Snap Gauge=快速GO/NO-GO量測外徑。"},
+{"n": 345, "q": "「歸零（Zeroing）」量具的目的是？", "opts": ["A. 永久消除偏差", "B. 建立相對量測基準點，消除已知偏差（對照標準件後調零）", "C. 重設量具日期", "D. 清除量測記錄"], "ans": "B", "expl": "歸零=相對量測基準設定；對照量塊/標準件後調零→後續量測為相對偏差；不消除固有系統誤差（需校正）。"},
+{"n": 346, "q": "稽核「客觀證據（Objective Evidence）」的定義是？", "opts": ["A. 稽核員的主觀評估", "B. 可驗證的事實、記錄、陳述或其他資訊（與稽核準則的符合性相關）", "C. 客戶投訴紀錄", "D. 管理層的口頭說明"], "ans": "B", "expl": "客觀證據=可核實的資訊：文件、記錄、量測數據、觀察事實；稽核結論必須以客觀證據為基礎。"},
+{"n": 347, "q": "「稽核發現（Audit Finding）」分類中，「主要不符合（Major NC）」與「次要不符合（Minor NC）」的區別是？", "opts": ["A. 兩者相同", "B. 主要NC：系統性缺失或導致系統失效的重大問題；次要NC：單一偶發性不符合要求", "C. 主要NC只適用於製造業", "D. 次要NC由客戶決定"], "ans": "B", "expl": "Major NC：系統完全缺失、多次重複、有重大產品安全影響；Minor NC：偶發的局部不符合，系統仍有效。"},
+{"n": 348, "q": "稽核「首次會議（Opening Meeting）」的主要目的是？", "opts": ["A. 開始討論不符合事項", "B. 介紹稽核範圍、目的、方法、行程，確認聯繫人，建立溝通基礎", "C. 簽署合約", "D. 確認不符合事項數量"], "ans": "B", "expl": "首次會議：稽核員自我介紹→確認稽核範圍/目的→說明方法→確認行程與受稽核窗口→機密性聲明。"},
+{"n": 349, "q": "「稽核追蹤（Audit Trail）」是指？", "opts": ["A. 跟隨受稽核方員工的行動", "B. 沿著流程/文件的連結路徑，從一個證據追溯到另一個，驗證系統的完整性", "C. 稽核員的行程記錄", "D. 稽核費用的核銷追蹤"], "ans": "B", "expl": "Audit Trail：例如從不合格品記錄→追查矯正措施→追查根因分析→追查培訓記錄→確認系統連結是否完整。"},
+{"n": 350, "q": "品質稽核中，「樣本選取」的建議方式是？", "opts": ["A. 固定查每個月的第一筆", "B. 依稽核員判斷+隨機抽樣，確保代表性，且針對高風險區域加強", "C. 只查最新的記錄", "D. 只查最舊的記錄"], "ans": "B", "expl": "稽核樣本：隨機抽樣確保代表性；判斷性抽樣針對高風險/過往問題領域；兩者結合最有效。"},
+{"n": 351, "q": "「過程稽核（Process Audit）」的目標是？", "opts": ["A. 確認品質系統文件是否完整", "B. 評估特定製程的輸入、轉換、輸出及管制是否符合計畫要求", "C. 查核最終產品品質", "D. 評估員工個人績效"], "ans": "B", "expl": "過程稽核（如VDA 6.3）：進入製程→確認輸入（材料/設備/人員）→查製程管制（SOP/SPC）→查輸出品質。"},
+{"n": 352, "q": "「產品稽核（Product Audit）」與「製程稽核」最主要的差異是？", "opts": ["A. 產品稽核不需要稽核員", "B. 產品稽核對已完成產品按規格逐項確認特性；製程稽核查製程控制方法", "C. 製程稽核只在客戶端進行", "D. 兩者無差異"], "ans": "B", "expl": "產品稽核：抽取成品，按設計規格/工程圖全面驗證；製程稽核：確認製程是否按計畫執行（方法/人員/設備）。"},
+{"n": 353, "q": "稽核「末次會議（Closing Meeting）」中必須包含？", "opts": ["A. 只宣布稽核通過或不通過", "B. 感謝配合→摘要稽核發現→說明不符合事項→說明後續矯正措施程序→確認後續計畫", "C. 簽署新合約", "D. 討論薪資福利"], "ans": "B", "expl": "末次會議：感謝配合→說明稽核方法及限制→報告發現（含NC）→確認受稽核方理解→說明後續報告與CAR流程。"},
+{"n": 354, "q": "「矯正措施（Corrective Action）」與「預防措施（Preventive Action）」的關係在 ISO 9001:2015 中是？", "opts": ["A. 兩者完全分開，各有獨立條款", "B. 2015版取消獨立的預防措施條款，改由「風險思維（6.1）」在系統層面主動預防", "C. 兩者合并為同一條款", "D. 預防措施已不重要"], "ans": "B", "expl": "2008版有8.5.3預防措施；2015版：預防概念融入風險管理（6.1），矯正措施（10.2）針對已發生的不符合。"},
+{"n": 355, "q": "「CAPA（Corrective and Preventive Action）報告」中，「根本原因分析（RCA）」最常用的方法是？", "opts": ["A. 抽樣檢驗", "B. 5 Whys、魚骨圖（Ishikawa）、FTA、Is/Is Not 分析", "C. 管制圖", "D. 散佈圖"], "ans": "B", "expl": "RCA工具：5 Whys（最廣用）、魚骨圖（系統性）、FTA（系統安全）、Is/Is Not（問題定義）；目標=找真正根因。"},
+{"n": 356, "q": "稽核計畫（Audit Programme）管理者的職責包含？", "opts": ["A. 只負責安排稽核日期", "B. 建立稽核計畫目標、管理稽核資源與能力、評估稽核員、維護稽核記錄", "C. 只負責出席每次稽核", "D. 代替稽核員執行稽核"], "ans": "B", "expl": "ISO 19011：Audit Programme Manager負責：目標設定、資源分配、稽核員能力評估、計畫監控改善。"},
+{"n": 357, "q": "「稽核員資格（Auditor Qualification）」按 ISO 19011 建議，至少需要？", "opts": ["A. 只需要大學學歷", "B. 教育+工作經驗+稽核培訓+實際稽核經驗+評估合格", "C. 只需要稽核培訓課程", "D. 只需要主任稽核員推薦"], "ans": "B", "expl": "ISO 19011稽核員：教育背景+品質相關工作經驗+稽核培訓（至少X小時）+實際稽核觀察/執行+定期評鑑。"},
+{"n": 358, "q": "供應商稽核（Second-Party Audit）的目的是？", "opts": ["A. 取得第三方認證", "B. 評估供應商的品質管理系統和能力是否符合買方要求", "C. 稽核內部流程", "D. 替代ISO認證"], "ans": "B", "expl": "二方稽核：買方/顧客稽核供應商；目的=確認供應商能力、品質系統合規、特殊製程管制；不取代三方認證。"},
+{"n": 359, "q": "「稽核密度（Audit Frequency）」應根據哪些因素調整？", "opts": ["A. 固定每年一次，不需調整", "B. 風險程度、上次稽核結果、製程變化、客戶要求", "C. 只根據稽核成本", "D. 只根據客戶投訴次數"], "ans": "B", "expl": "稽核頻率動態調整：高風險/問題供應商增加頻率；表現穩定可降低頻率；這是「風險基礎稽核（Risk-Based Auditing）」原則。"},
+{"n": 360, "q": "「稽核機密性（Confidentiality）」要求稽核員？", "opts": ["A. 可自由分享稽核資訊", "B. 對稽核中獲取的商業機密/敏感資訊保密，未經授權不得對第三方披露", "C. 只對稽核結果保密", "D. 只有外部稽核需要保密"], "ans": "B", "expl": "ISO 19011：稽核員需保護稽核中獲取的資訊；稽核報告只提供授權方；違反保密可能引發法律責任。"},
+{"n": 361, "q": "「產品認證（Product Certification）」與「系統認證（System Certification）」的差異是？", "opts": ["A. 兩者完全相同", "B. 產品認證針對特定產品符合標準（如CE、UL）；系統認證針對管理系統運作（如ISO 9001）", "C. 只有產品認證需要稽核", "D. 系統認證包含產品認證"], "ans": "B", "expl": "Product Cert（如UL/CE/FDA）：特定產品符合安全/性能規範；System Cert（ISO 9001）：管理系統是否有效運作。"},
+{"n": 362, "q": "「稽核發現通知（Audit Finding Report）」應在稽核後多久內發出？", "opts": ["A. 1年內", "B. 依稽核計畫或合約約定，通常在2~4週內（或更短）", "C. 只需口頭通知", "D. 沒有時間要求"], "ans": "B", "expl": "ISO 19011建議及時出具報告；IATF 16949要求CAR通常在10個工作天內；及時性是矯正有效性的關鍵。"},
+{"n": 363, "q": "「過程稽核（VDA 6.3）」中，過程要素評估包含哪些層面？", "opts": ["A. 只評估最終產品", "B. 人員（Man）、機器（Machine）、物料（Material）、方法（Method）、量測（Measurement）、環境（Milieu）", "C. 只評估設備", "D. 只評估文件"], "ans": "B", "expl": "VDA 6.3製程稽核：6M（人機料法量環）系統評估每個製程要素；結果計分（%達成率），<80%需矯正。"},
+{"n": 364, "q": "「稽核矩陣（Audit Matrix）」的用途是？", "opts": ["A. 計算稽核費用", "B. 將稽核要求/條款與組織流程/部門進行交叉對應，確保稽核全面覆蓋", "C. 排列稽核員職位", "D. 記錄稽核結果統計"], "ans": "B", "expl": "稽核矩陣（Coverage Matrix）：行=ISO條款/要求；列=部門/流程；交叉格=稽核頻率/計畫；確保無遺漏。"},
+{"n": 365, "q": "「稽核準則（Audit Criteria）」是指？", "opts": ["A. 稽核員的個人標準", "B. 用於評估客觀證據的一組方針、程序或要求（如ISO標準、法規、顧客要求）", "C. 稽核費用標準", "D. 稽核員培訓標準"], "ans": "B", "expl": "Audit Criteria=稽核的判斷依據，可以是：ISO標準、法規、內部程序、合約要求；決定「不符合」的評判依據。"},
+{"n": 366, "q": "「風險管理」中，「風險規避（Risk Avoidance）」是指？", "opts": ["A. 接受風險並監控", "B. 完全停止可能引發風險的活動", "C. 將風險轉移給第三方", "D. 降低風險的嚴重程度"], "ans": "B", "expl": "四大風險應對：Avoid（規避）=停止活動；Transfer（轉移）=保險/外包；Mitigate（降低）=控制措施；Accept（接受）。"},
+{"n": 367, "q": "「ISO 31000 風險管理」框架的核心流程是？", "opts": ["A. PDCA", "B. 風險識別→風險分析→風險評估→風險應對→監控與審查", "C. DMAIC", "D. FMEA→FTA"], "ans": "B", "expl": "ISO 31000：背景設定→識別→分析（可能性+後果）→評估（優先級）→應對→監控→溝通；為通用框架。"},
+{"n": 368, "q": "「設計 FMEA（DFMEA）」主要分析的是？", "opts": ["A. 製程中可能發生的失效", "B. 產品設計中的潛在失效模式及其對使用者/系統的影響", "C. 供應商的失效模式", "D. 現場服務過程的失效"], "ans": "B", "expl": "DFMEA：在設計階段分析每個設計特性的失效模式→影響→嚴重度；目的是在量產前識別並消除設計弱點。"},
+{"n": 369, "q": "「製程 FMEA（PFMEA）」的「偵測度（D, Detection）」評分高（如9-10分）代表？", "opts": ["A. 很容易偵測到失效", "B. 現有管制手段幾乎無法在失效流出前偵測到", "C. 嚴重性高", "D. 發生頻率高"], "ans": "B", "expl": "Detection（D）：D=1=幾乎確定能偵測（自動100%檢測）；D=9~10=幾乎不可能偵測（無相關管制）；D越高越危險。"},
+{"n": 370, "q": "「FMEA 邊界圖（Boundary Diagram）」與「P 圖（Parameter Diagram）」的用途是？", "opts": ["A. 繪製生產流程圖", "B. 邊界圖=定義分析範圍與系統界面；P圖=分析輸入/輸出/控制因子/雜訊因子", "C. 繪製品質成本圖", "D. 定義稽核範圍"], "ans": "B", "expl": "DFMEA前置工具：Boundary Diagram（範圍+界面）→Block Diagram（子系統）→P-Diagram（因子分析）→DFMEA。"},
+{"n": 371, "q": "「失效模式（Failure Mode）」的描述應該是？", "opts": ["A. 失效的原因", "B. 特徵未達到設計/製程意圖的方式（如斷裂、洩漏、短路、尺寸過大）", "C. 失效的最終影響", "D. 失效的解決方案"], "ans": "B", "expl": "失效模式=失效的表現形式（how it fails）；失效原因=為何發生；失效影響=對客戶/系統的影響；三者分開分析。"},
+{"n": 372, "q": "「特殊特性（Special Characteristics）」在 IATF 16949 中必須？", "opts": ["A. 放寬管制要求", "B. 在FMEA、管制計畫、作業指導書中標示，並套用強化管制（如SPC、防錯）", "C. 只需文件記錄", "D. 免除稽核"], "ans": "B", "expl": "CC（Critical Characteristics）/SC（Significant Characteristics）：必須在FMEA標示→管制計畫列管→SOP加強管制。"},
+{"n": 373, "q": "「危害分析與重要管制點（HACCP）」主要應用於哪個領域？", "opts": ["A. 航太", "B. 食品安全與製造（確保食品從原料到終端消費者的安全）", "C. 汽車製造", "D. 核能"], "ans": "B", "expl": "HACCP：食品工業系統性風險管理；識別生物/化學/物理危害→設定CCP→管制措施→監控→驗證。"},
+{"n": 374, "q": "「失效樹分析（FTA）」中，「AND 閘」的意義是？", "opts": ["A. 任一輸入事件發生即導致輸出事件", "B. 所有輸入事件必須同時發生，才會導致輸出事件", "C. 至少一個輸入導致輸出", "D. 輸入與輸出無關"], "ans": "B", "expl": "AND Gate：多個事件必須同時發生才導致頂部事件；使系統更可靠（需更多失效同時發生）；OR Gate=任一即失效。"},
+{"n": 375, "q": "「事件樹分析（ETA, Event Tree Analysis）」相比 FTA 的特點是？", "opts": ["A. 分析過去的失效", "B. 從初始事件出發（前向歸納），分析事件展開路徑及後果的可能性", "C. 只用於安全評估", "D. 與FTA完全相同"], "ans": "B", "expl": "FTA=後向演繹（Top-Down）；ETA=前向歸納（Bottom-Up）：從起因事件出發，追蹤系統響應路徑到各種結果。"},
+{"n": 376, "q": "「風險矩陣」中，落在「高風險（High Risk）」區的項目應優先採取哪種行動？", "opts": ["A. 接受風險，定期監控", "B. 立即採取控制措施，降低發生機率或嚴重性", "C. 轉移風險給保險公司", "D. 忽略，等問題發生再處理"], "ans": "B", "expl": "高風險（高嚴重度×高機率）=需立即行動；中風險=計畫性改善；低風險=可接受並監控。"},
+{"n": 377, "q": "「HACCP 七大原則」中，「矯正措施（Corrective Action）」在第幾個原則？", "opts": ["A. 第2個", "B. 第5個", "C. 第3個", "D. 第7個"], "ans": "B", "expl": "HACCP七原則：1.危害分析→2.CCP識別→3.關鍵界限→4.監控→5.矯正措施→6.驗證→7.記錄保存。"},
+{"n": 378, "q": "「FMEA 責任分配（Action Ownership）」的最佳實踐是？", "opts": ["A. 全部由品質工程師負責", "B. 每個改善行動指派具體的責任人員與完成日期", "C. 由委員會集體負責", "D. 只有高優先項目才需責任人"], "ans": "B", "expl": "FMEA行動欄位：每個RPN/AP高的項目必須指定負責人（Owner）+目標完成日期；否則行動無法落實。"},
+{"n": 379, "q": "「危害（Hazard）」與「風險（Risk）」的差異是？", "opts": ["A. 兩者相同", "B. 危害=造成傷害的固有特性（如刀鋒）；風險=危害在特定條件下造成傷害的可能性（機率×嚴重度）", "C. 風險是確定發生的", "D. 危害是主觀判斷"], "ans": "B", "expl": "Hazard=潛在的傷害源（固有屬性）；Risk=暴露於危害後，傷害發生的可能性與後果；Risk=Hazard×Exposure×Consequence。"},
+{"n": 380, "q": "「製程能力不足（Cpk < 1.0）」從風險角度看，最佳的短期應對措施是？", "opts": ["A. 立即停線", "B. 加強全數或高頻抽樣檢驗，同時分析根因並制定長期改善計畫", "C. 擴大規格界限", "D. 更換操作員"], "ans": "B", "expl": "Cpk<1短期：增加檢驗頻率（降低逃出風險）→同時進行根因分析（找原因）→長期：改善製程（σ↓或μ對準）。"},
+{"n": 381, "q": "在精益生產中，「價值流圖」(Value Stream Map)的主要目的是什麼？", "opts": ["A. 統計製程能力", "B. 識別並消除浪費，優化物料與資訊流", "C. 計算設備效率", "D. 安排生產排程"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 382, "q": "Six Sigma DMAIC 中，「控制」(Control)階段的主要工具是？", "opts": ["A. 魚骨圖", "B. SIPOC", "C. 控制計劃(Control Plan)", "D. FMEA"], "ans": "C", "expl": "正確答案為 C"},
+{"n": 383, "q": "「防誤/錯誤防止」(Poka-Yoke)的主要概念是？", "opts": ["A. 增加檢驗頻率", "B. 設計機制使錯誤不可能發生或立即被發現", "C. 提高操作員技能", "D. 建立標準作業程序"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 384, "q": "在 5S 中，「整頓」(Seiton)的定義是？", "opts": ["A. 清掃工作區", "B. 清除不必要的物品", "C. 將物品整齊排列，定位、定量，易於取用", "D. 建立標準與規範"], "ans": "C", "expl": "正確答案為 C"},
+{"n": 385, "q": "「全面生產維護」(TPM)中，OEE(Overall Equipment Effectiveness)的計算公式為？", "opts": ["A. 可用率 × 效能率 × 品質率", "B. 產出量 ÷ 投入量", "C. MTBF ÷ (MTBF + MTTR)", "D. 良品數 ÷ 總產出數"], "ans": "A", "expl": "正確答案為 A"},
+{"n": 386, "q": "「生產前置時間」(Lead Time)在精益生產中可通過以下哪個方法縮短？", "opts": ["A. 增加批量大小", "B. 拉動系統(Pull System)與看板(Kanban)", "C. 增加在製品庫存", "D. 增加操作員數量"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 387, "q": "在 Six Sigma 中，「顯著性水準」(Significance Level) α = 0.05 意味著？", "opts": ["A. 有5%的機率犯型II錯誤", "B. 有5%的機率在虛無假設為真時拒絕它（型I錯誤）", "C. 效果量為0.05", "D. 信賴水準為5%"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 388, "q": "「失效樹分析」(FTA)中，「OR閘」(OR Gate)表示？", "opts": ["A. 所有輸入事件同時發生，頂部事件才發生", "B. 任一輸入事件發生，頂部事件即發生", "C. 輸入事件不發生，頂部事件才發生", "D. 需要特定順序才觸發"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 389, "q": "PDCA 循環中，「Act」(處置/行動)階段的主要任務是？", "opts": ["A. 分析數據", "B. 實施改進計劃", "C. 標準化成功的改進或重新啟動循環", "D. 收集基準數據"], "ans": "C", "expl": "正確答案為 C"},
+{"n": 390, "q": "「品質成本」(Cost of Quality)中，「鑑定成本」(Appraisal Cost)包括？", "opts": ["A. 返工和報廢", "B. 預防培訓", "C. 測試、檢驗和審計", "D. 客戶抱怨處理"], "ans": "C", "expl": "正確答案為 C"},
+{"n": 391, "q": "「持續改進」(Kaizen)的核心理念是？", "opts": ["A. 大規模激進改變", "B. 透過員工全員參與，持續進行小幅度改善", "C. 只有管理層推動改善", "D. 集中資源在單一重大改進"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 392, "q": "在相關分析中，「決定係數」(R²)的值為0.81，表示？", "opts": ["A. 相關係數為0.81", "B. 因變量81%的變異可由自變量解釋", "C. 模型誤差為19%", "D. 殘差平均值為0.81"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 393, "q": "「8D問題解決」方法中，第幾步是「實施永久性糾正措施」？", "opts": ["A. D4", "B. D5", "C. D6", "D. D7"], "ans": "C", "expl": "正確答案為 C"},
+{"n": 394, "q": "在精益生產中，「單件流」(One-Piece Flow)的主要優點是？", "opts": ["A. 最大化機器使用率", "B. 減少在製品、縮短前置時間、早期發現問題", "C. 降低設備投資", "D. 提高批量生產效率"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 395, "q": "「田口方法」(Taguchi Method)中，「信噪比」(S/N Ratio)用於？", "opts": ["A. 計算設備可靠度", "B. 量化設計對干擾因素的強健性", "C. 計算製程能力", "D. 評估量測系統誤差"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 396, "q": "「供應商評鑑」中，PPM(Parts Per Million)指標代表？", "opts": ["A. 每百萬零件中不良品數量", "B. 每百萬美元採購金額", "C. 每百萬操作次數的失效數", "D. 每百萬件的成本"], "ans": "A", "expl": "正確答案為 A"},
+{"n": 397, "q": "「QFD」(Quality Function Deployment，品質機能展開)的核心工具是？", "opts": ["A. 魚骨圖", "B. 品質屋(House of Quality)", "C. PFMEA", "D. 控制計劃"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 398, "q": "在假設檢定中，「型II錯誤」(Type II Error, β)的後果是？", "opts": ["A. 接受真實的虛無假設", "B. 未能偵測到實際存在的效果（漏報）", "C. 拒絕正確的備擇假設", "D. 過度放大樣本差異"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 399, "q": "「製程稽核」(Process Audit)與「產品稽核」(Product Audit)的主要差異是？", "opts": ["A. 製程稽核只看文件；產品稽核看實物", "B. 製程稽核評估如何做；產品稽核評估做出來的結果", "C. 製程稽核由外部人員做；產品稽核由內部人員做", "D. 兩者無差異"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 400, "q": "「統計抽樣計劃」中，「消費者風險」(Consumer's Risk, β)指在何種條件下接受批次？", "opts": ["A. 批次品質良好時拒絕", "B. 批次品質不良時接受（型II錯誤）", "C. 樣本大小過小", "D. AQL超過設定值"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 401, "q": "「X̄-R 管制圖」中，若有連續6點遞增，表示？", "opts": ["A. 製程在管制內", "B. 可能存在趨勢（特殊原因）", "C. 管制界限設定錯誤", "D. 量測系統不穩定"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 402, "q": "「製程能力指數」Cp 與 Cpk 的差異在於？", "opts": ["A. Cp考慮製程平均偏移；Cpk不考慮", "B. Cpk考慮製程平均偏移；Cp不考慮", "C. Cp用於計算型數據；Cpk用於計量型數據", "D. Cpk是長期能力；Cp是短期能力"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 403, "q": "在「實驗設計」(DOE)中，「全因子設計」(Full Factorial Design)的優點是？", "opts": ["A. 試驗次數最少", "B. 可評估所有主效應與交互作用", "C. 只適用於2個因子", "D. 不需要隨機化"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 404, "q": "「不合格品率管制圖」(p-chart)適用於？", "opts": ["A. 計量型數據，樣本大小固定", "B. 計數型數據，樣本大小可變，監控不合格品比例", "C. 計數型數據，計算每單位缺點數", "D. 小樣本，監控個別值"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 405, "q": "「單因子變異數分析」(One-Way ANOVA)的虛無假設為？", "opts": ["A. 各組平均值均不相等", "B. 各組平均值均相等", "C. 各組變異數相等", "D. 數據呈常態分布"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 406, "q": "在「量測系統分析」(MSA)中，「再現性」(Reproducibility)衡量的是？", "opts": ["A. 同一操作員重複量測同一零件的變異", "B. 不同操作員量測同一零件時的變異", "C. 量測設備本身的精度", "D. 零件實際尺寸的變異"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 407, "q": "「常態分布」的偏態係數(Skewness)和峰態係數(Kurtosis)分別為？", "opts": ["A. 偏態=1, 峰態=3", "B. 偏態=0, 峰態=3", "C. 偏態=0, 峰態=0", "D. 偏態=1, 峰態=0"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 408, "q": "「管制圖」上的「普通原因變異」(Common Cause Variation)是指？", "opts": ["A. 可識別並消除的特殊原因", "B. 製程固有的、隨機的、穩定的背景噪聲", "C. 量測誤差", "D. 操作員失誤"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 409, "q": "在「接受抽樣」中，「作業特性曲線」(OC Curve)描述了什麼？", "opts": ["A. 樣本大小與成本的關係", "B. 批次接受概率與批次品質（不良率）的關係", "C. AQL與LTPD的關係", "D. 檢驗時間與批次大小的關係"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 410, "q": "「指數分布」(Exponential Distribution)常用於可靠度分析，其「失效率」(Hazard Rate)是？", "opts": ["A. 隨時間增加", "B. 常數（記憶力無關性）", "C. 隨時間減少", "D. 先減少後增加"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 411, "q": "「箱型圖」(Box Plot)中，箱體的上下邊界分別代表？", "opts": ["A. 最大值和最小值", "B. 第75百分位數(Q3)和第25百分位數(Q1)", "C. 平均值±標準差", "D. 管制界限UCL和LCL"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 412, "q": "在「回歸分析」中，「殘差」(Residual)是指？", "opts": ["A. 自變量的誤差", "B. 觀測值與模型預測值之差", "C. 模型的誤差項係數", "D. 決定係數的補數"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 413, "q": "「二項分布」(Binomial Distribution)適用的條件是？", "opts": ["A. 事件連續發生，無固定試驗次數", "B. 固定試驗次數，每次試驗結果為成功/失敗，試驗間獨立", "C. 樣本量很大且事件罕見", "D. 數據呈常態分布"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 414, "q": "「卡方檢定」(Chi-Square Test)用於？", "opts": ["A. 比較兩組平均值", "B. 測試分類數據的獨立性或擬合優度", "C. 分析變異數", "D. 檢驗常態性"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 415, "q": "「中央極限定理」(Central Limit Theorem)表明？", "opts": ["A. 大樣本的個別數據呈常態分布", "B. 從任何分布抽取足夠大樣本的樣本均值趨近於常態分布", "C. 樣本標準差等於總體標準差", "D. 樣本量增加時，偏差減少"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 416, "q": "「Gage R&R」分析中，若「量測系統變異」佔「總變異」的百分比超過30%，表示？", "opts": ["A. 量測系統可接受", "B. 量測系統需要改善，變異過大", "C. 量測系統勉強可接受", "D. 總體製程能力良好"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 417, "q": "「製程失效模式」分析中，若 RPN = Severity × Occurrence × Detection，Detection 評分低分(如1)代表？", "opts": ["A. 幾乎無法偵測到失效", "B. 幾乎確定能偵測到失效（偵測能力強）", "C. 失效發生率低", "D. 嚴重度低"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 418, "q": "「F檢定」(F-Test)在ANOVA中用於？", "opts": ["A. 比較兩組樣本的中位數", "B. 比較組間變異與組內變異的比值，判斷組間平均值差異是否顯著", "C. 檢驗常態性", "D. 估計總體標準差"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 419, "q": "在「接受抽樣計劃」中，增大樣本大小(n)的效果是？", "opts": ["A. OC曲線變得更平緩", "B. OC曲線變得更陡峭，區分能力增強", "C. AQL自動降低", "D. 拒絕數(Re)自動增加"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 420, "q": "「泊松分布」(Poisson Distribution)適合用於？", "opts": ["A. 計算二元結果的概率", "B. 計算固定時間/空間內稀有事件的發生次數", "C. 分析連續量測數據", "D. 估計最大值與最小值"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 421, "q": "ISO 9001:2015 中，「風險與機會」(Risks and Opportunities)要求在哪個條文中？", "opts": ["A. 條文 4.1", "B. 條文 6.1", "C. 條文 7.1", "D. 條文 9.3"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 422, "q": "「IATF 16949:2016」是哪個行業的品質管理系統標準？", "opts": ["A. 航太工業", "B. 汽車工業", "C. 醫療設備", "D. 食品安全"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 423, "q": "ISO 9001:2015 的「設計輸出」(Design Output)應包含哪些資訊？", "opts": ["A. 只有圖面", "B. 規格、圖面、驗收準則、產品特性及安全注意事項", "C. 客戶需求", "D. 市場分析"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 424, "q": "「量測設備管理」中，「確認狀態」應在設備上如何標示？", "opts": ["A. 以書面記錄即可，設備不需標示", "B. 貼附校驗標籤顯示有效期限", "C. 以顏色條碼區分", "D. 掃描條碼查詢系統"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 425, "q": "ISO 9001:2015 的「不符合及糾正措施」要求企業保留哪些紀錄？", "opts": ["A. 只需保留糾正措施計劃", "B. 不符合性質、採取措施及評審有效性的記錄", "C. 客戶投訴紀錄", "D. 預防措施記錄"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 426, "q": "「供應商開發」(Supplier Development)的目的是？", "opts": ["A. 降低採購成本", "B. 提升供應商能力以滿足客戶品質與交期要求", "C. 增加供應商數量", "D. 建立供應商競爭機制"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 427, "q": "在「PPAP」(Production Part Approval Process)中，第幾級(Level)要求提交所有文件及樣品？", "opts": ["A. Level 1", "B. Level 3", "C. Level 5", "D. Level 2"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 428, "q": "「APQP」(Advanced Product Quality Planning)共分為幾個階段？", "opts": ["A. 3個", "B. 5個", "C. 7個", "D. 4個"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 429, "q": "ISO 13485 是針對哪種產業的品質管理系統標準？", "opts": ["A. 汽車零件", "B. 醫療器材", "C. 航太設備", "D. 食品加工"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 430, "q": "「不符合品管制」程序中，不符合品在處置決定前應如何管理？", "opts": ["A. 立即報廢", "B. 隔離並標識，防止非預期使用或交付", "C. 返回供應商", "D. 繼續加工"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 431, "q": "ISO 9001:2015 條文 8.4「外部供應的過程、產品和服務管制」中，「外包」過程應如何控制？", "opts": ["A. 免除品質管理系統要求", "B. 組織須對外包過程的控制負責，並納入QMS", "C. 外包商自行負責", "D. 僅需驗收最終產品"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 432, "q": "「顧客滿意度」測量的方法不包括哪一項？", "opts": ["A. 問卷調查", "B. 供應商稽核", "C. 客訴分析", "D. NPS(Net Promoter Score)"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 433, "q": "「控制計劃」(Control Plan)中應包含的資訊是？", "opts": ["A. 只有產品規格", "B. 製程步驟、管制特性、量測方法、樣本計劃及反應計劃", "C. 生產排程", "D. 人員訓練記錄"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 434, "q": "AS9100 是哪個產業使用的品質管理系統標準？", "opts": ["A. 汽車", "B. 航太及國防", "C. 醫療", "D. 食品"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 435, "q": "「首件檢驗」(First Article Inspection, FAI)的目的是？", "opts": ["A. 降低生產成本", "B. 確認製程能按照工程設計文件生產出符合規格的產品", "C. 評估供應商績效", "D. 改善生產效率"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 436, "q": "ISO 9001 要求組織在「管理評審」(Management Review)中評估哪些投入？", "opts": ["A. 只有財務數據", "B. 品質目標達成、客戶滿意、過程績效、稽核結果等", "C. 只有客戶投訴", "D. 員工滿意度"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 437, "q": "「製程驗證」(Process Validation)與「製程確認」的主要用途在哪個產業最為強調？", "opts": ["A. 汽車", "B. 醫療器材與製藥", "C. 電子", "D. 建築"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 438, "q": "在「生產管制計劃」中，「反應計劃」(Reaction Plan)的目的是？", "opts": ["A. 預防未來失效", "B. 當製程失控時，規定應採取的即時措施以保護客戶", "C. 記錄失效原因", "D. 計算製程能力"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 439, "q": "「設計審查」(Design Review)的主要目的是？", "opts": ["A. 計算設計成本", "B. 評估設計是否滿足要求，並識別問題與風險", "C. 批准最終設計", "D. 培訓工程師"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 440, "q": "在ISO 9001:2015中，「組織知識」(Organizational Knowledge)要求在哪個條文？", "opts": ["A. 條文 6.2", "B. 條文 7.1.6", "C. 條文 8.3", "D. 條文 9.1"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 441, "q": "「破壞性測試」(Destructive Testing)與「非破壞性測試」的主要差異是？", "opts": ["A. 破壞性測試更精確", "B. 破壞性測試測試後零件不能再用；NDT則可保留零件完整性", "C. 破壞性測試成本更高", "D. NDT只適用於金屬材料"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 442, "q": "「硬度測試」中，「洛氏硬度」(Rockwell)與「維氏硬度」(Vickers)的主要差異是？", "opts": ["A. 洛氏適用較軟材料；維氏適用硬材料", "B. 洛氏直接讀取硬度值（壓痕深度）；維氏通過量測壓痕對角線計算", "C. 兩種方法測試結果相同", "D. 洛氏壓頭為球形；維氏壓頭為錐形"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 443, "q": "「拉伸測試」(Tensile Test)可直接測量哪些材料特性？", "opts": ["A. 硬度與韌性", "B. 抗拉強度、降伏強度、延伸率、彈性模量", "C. 疲勞壽命", "D. 衝擊韌性"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 444, "q": "「衝擊測試」(Impact Test, Charpy/Izod)主要評估材料的？", "opts": ["A. 抗拉強度", "B. 衝擊韌性（抵抗突然衝擊力的能力）", "C. 硬度", "D. 疲勞強度"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 445, "q": "「疲勞測試」(Fatigue Test)的目的是評估材料在？", "opts": ["A. 靜態載荷下的強度", "B. 交變（循環）載荷下的失效特性和耐久性", "C. 高溫下的性能", "D. 衝擊載荷下的韌性"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 446, "q": "「鹽霧測試」(Salt Spray Test)主要用於評估？", "opts": ["A. 材料強度", "B. 塗層或鍍層的耐腐蝕性", "C. 尺寸穩定性", "D. 導電性"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 447, "q": "在「電磁相容性」(EMC)測試中，「輻射干擾」(Radiated Emission)測試目的是？", "opts": ["A. 測試設備抗干擾能力", "B. 確認設備產生的電磁輻射不超過法規限值", "C. 測試靜電放電耐受性", "D. 評估設備絕緣性能"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 448, "q": "「ISO 14001」環境管理系統中，「環境考量面」(Environmental Aspect)是指？", "opts": ["A. 環境法規要求", "B. 組織活動、產品或服務中能與環境發生交互作用的要素", "C. 環境污染後果", "D. 利益相關者需求"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 449, "q": "「LCA」(Life Cycle Assessment，生命週期評估)涵蓋的範疇是？", "opts": ["A. 只有製造階段", "B. 從原料獲取到最終廢棄的整個產品生命週期", "C. 只有使用階段", "D. 只有廢棄處理階段"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 450, "q": "「RoHS指令」限制哪類有害物質？", "opts": ["A. 溫室氣體", "B. 電子電氣設備中的特定有害物質（如鉛、汞、鎘等）", "C. 食品添加劑", "D. 工業廢水污染物"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 451, "q": "在「外觀檢驗」中，「光源標準」的重要性是？", "opts": ["A. 加速檢驗速度", "B. 確保在標準光源條件下評估，消除光源差異造成的誤判", "C. 保護操作員視力", "D. 降低能源消耗"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 452, "q": "「功能測試」(Functional Test)在產品開發中的目的是？", "opts": ["A. 只驗證尺寸符合規格", "B. 確認產品在預期操作條件下正確執行其預定功能", "C. 評估生產效率", "D. 計算製程良率"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 453, "q": "「測試計劃」(Test Plan)應包含哪些核心要素？", "opts": ["A. 只有測試步驟", "B. 測試範圍、方法、資源、排程、通過/失敗準則及風險", "C. 產品規格", "D. 生產數量"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 454, "q": "「Go/No-Go 量規」的使用原則基於什麼？", "opts": ["A. 量測實際尺寸數值", "B. GO端確認最大材料條件可通過；NO-GO端確認最小材料條件不通過", "C. 計算製程能力", "D. 替代CMM量測"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 455, "q": "「目視檢驗」(Visual Inspection)標準化的目的是？", "opts": ["A. 消除所有人工檢驗", "B. 建立一致的判斷準則，降低不同檢驗員間的主觀差異", "C. 提高生產速度", "D. 減少設備投資"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 456, "q": "「X光檢測」(Radiographic Testing, RT)最適合發現哪類缺陷？", "opts": ["A. 表面裂紋", "B. 內部體積型缺陷（如氣孔、夾渣）", "C. 材料硬度差異", "D. 表面粗糙度異常"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 457, "q": "「光學影像量測系統」(Vision System)在自動化檢驗中的優點是？", "opts": ["A. 比接觸式量測更精確", "B. 高速、非接觸、可同時量測多個特徵", "C. 適用所有材料表面", "D. 不需要校準"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 458, "q": "在「進料檢驗」(Incoming Inspection)中，「豁免」(Dock-to-Stock)的條件通常是？", "opts": ["A. 所有供應商均可豁免", "B. 供應商有良好歷史績效記錄且通過認證", "C. 產品單價低", "D. 生產緊急時"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 459, "q": "「測量不確定度」(Measurement Uncertainty)的「A類評定」是指？", "opts": ["A. 由技術規範或校準證書獲得的不確定度", "B. 通過統計方法（多次重複量測）評定的不確定度", "C. 製造商規格書的不確定度", "D. 歷史數據查表法"], "ans": "B", "expl": "正確答案為 B"},
+{"n": 460, "q": "「製程巡迴檢驗」(Patrol Inspection)的主要目的是？", "opts": ["A. 取代末件檢驗", "B. 在生產過程中定期抽查，早期發現製程異常趨勢", "C. 評估操作員技能", "D. 計算即時良率"], "ans": "B", "expl": "正確答案為 B"}];
+const CALC = [{"n": 71, "ch": "品質成本 PAF 分析", "q": "某公司月產量 10,000 件，品質成本：預防 NT$45,000、鑑定 NT$72,000、內部失敗 NT$105,000、外部失敗 NT$78,000。試計算：(1) 總品質成本 (2) 失敗成本占比 (3) 每件品質成本。", "given": "預防$45K, 鑑定$72K, 內部失敗$105K, 外部失敗$78K, 月產量10,000件", "steps": ["總品質成本 = 45,000 + 72,000 + 105,000 + 78,000 = NT$300,000", "失敗成本 = 105,000 + 78,000 = NT$183,000", "失敗成本占比 = 183,000 / 300,000 × 100% = 61.0%", "每件品質成本 = 300,000 / 10,000 = NT$30 / 件"], "ans": "總品質成本 NT$300,000；失敗成本占 61.0%；每件品質成本 NT$30"}, {"n": 72, "ch": "田口品質損失函數", "q": "田口損失函數 L(y)=k(y−m)²，修理費用 A=NT$800，功能界限 Δ=0.4mm，目標值 m=50.0mm，量測值 y=50.3mm。試計算：(1) k (2) L(y)。", "given": "A=NT$800, Δ=0.4mm, m=50.0mm, y=50.3mm", "steps": ["k = A / Δ² = 800 / (0.4)² = 800 / 0.16 = 5,000 NT$/mm²", "偏差量：y − m = 50.3 − 50.0 = 0.3 mm", "L(y) = k × (y−m)² = 5,000 × (0.3)² = 5,000 × 0.09 = NT$450"], "ans": "k = 5,000 NT$/mm²；L(y) = NT$450"}, {"n": 73, "ch": "品質改善 ROI", "q": "改善前月失敗成本 NT$240,000，投入預防成本 NT$50,000 後，失敗成本降至 NT$90,000。試計算：(1) 每月節省金額 (2) ROI（%）。", "given": "改善前失敗=$240K, 投入預防=$50K, 改善後失敗=$90K", "steps": ["每月節省 = 240,000 − 90,000 = NT$150,000", "淨效益 = 節省額 − 投入 = 150,000 − 50,000 = NT$100,000", "ROI = 100,000 / 50,000 × 100% = 200%"], "ans": "每月節省 NT$150,000；ROI = 200%"}, {"n": 74, "ch": "FMEA RPN 計算", "q": "三種失效模式：A(S=7,O=5,D=6)、B(S=9,O=4,D=7)、C(S=6,O=8,D=5)。計算各RPN、找出優先改善項，及B的D改善至3後的新RPN。", "given": "A: S=7,O=5,D=6；B: S=9,O=4,D=7；C: S=6,O=8,D=5", "steps": ["RPN_A = 7 × 5 × 6 = 210", "RPN_B = 9 × 4 × 7 = 252（最高，優先改善）", "RPN_C = 6 × 8 × 5 = 240", "改善後 B 的 D 降至 3：RPN_B_new = 9 × 4 × 3 = 108（降低 57%）"], "ans": "RPN: A=210, B=252（最高，優先）, C=240；改善後 B 的 RPN=108"}, {"n": 75, "ch": "GR&R 量測系統分析", "q": "MSA 研究：重複性 EV=0.15，再現性 AV=0.10，零件間變異 PV=0.35。計算：(1) GR&R (2) TV (3) %GR&R (4) 判斷結論。", "given": "EV=0.15, AV=0.10, PV=0.35（標準差單位）", "steps": ["GR&R = √(EV² + AV²) = √(0.0225+0.01) = √0.0325 ≈ 0.1803", "TV = √(GR&R² + PV²) = √(0.0325+0.1225) = √0.155 ≈ 0.3937", "%GR&R = (0.1803 / 0.3937) × 100% ≈ 45.8%", "判斷：%GR&R = 45.8% > 30% → 量測系統不合格，必須改善"], "ans": "GR&R≈0.180；%GR&R≈45.8% → 不合格（>30%），量測系統需改善"}, {"n": 76, "ch": "製程均值對準改善", "q": "製程 X~N(25.5, 1.0²)，USL=28, LSL=22。改善後 μ→25.0，σ不變。計算：(1) 改善前 Cpk (2) 改善前良率 (3) 改善後 Cpk (4) 改善後良率。（Φ(2.5)=0.9938, Φ(3.0)=0.9987）", "given": "改善前 μ=25.5, σ=1.0；改善後 μ=25.0；USL=28, LSL=22", "steps": ["改善前：CPU=(28−25.5)/3=0.833；CPL=(25.5−22)/3=1.167", "改善前 Cpk = min(0.833, 1.167) = 0.833", "改善前良率 = Φ(2.5)−Φ(−3.5) = 0.9938−0.0002 = 99.36%", "改善後：CPU=CPL=(28−25)/3=1.000；Cpk=1.000", "改善後良率 = Φ(3.0)−Φ(−3.0) = 0.9987−0.0013 = 99.74%"], "ans": "改善前 Cpk=0.833，良率99.36%；改善後 Cpk=1.000，良率99.74%"}, {"n": 77, "ch": "MSA 量具偏差分析", "q": "標準件參考值=50.00mm，5次量測：49.85, 50.10, 49.95, 50.05, 50.05，規格寬度 T=10mm。計算：(1) 量測均值 (2) Bias (3) %Bias (4) 判斷。", "given": "參考值=50.00mm, 量測值：49.85/50.10/49.95/50.05/50.05, T=10mm", "steps": ["X̄ = (49.85+50.10+49.95+50.05+50.05) / 5 = 250.00/5 = 50.00 mm", "Bias = X̄ − 參考值 = 50.00 − 50.00 = 0.00 mm", "%Bias = |0| / 10 × 100% = 0.0%", "判斷：Bias=0，量具無系統性偏差，量測準確性良好"], "ans": "X̄=50.00mm，Bias=0，%Bias=0%，量具無系統偏差"}, {"n": 78, "ch": "X̄-R 管制界限計算", "q": "n=5（A₂=0.577, D₃=0, D₄=2.114），X̄̄=25.40, R̄=1.20。計算 X̄ 圖與 R 圖的管制界限（UCL/LCL）。", "given": "n=5, A₂=0.577, D₃=0, D₄=2.114, X̄̄=25.40, R̄=1.20", "steps": ["UCL_X̄ = X̄̄ + A₂R̄ = 25.40 + 0.577×1.20 = 25.40 + 0.692 = 26.09", "LCL_X̄ = X̄̄ − A₂R̄ = 25.40 − 0.692 = 24.71", "UCL_R = D₄ × R̄ = 2.114 × 1.20 = 2.54", "LCL_R = D₃ × R̄ = 0 × 1.20 = 0（n≤6 時 D₃=0）"], "ans": "UCL_X̄=26.09，LCL_X̄=24.71，UCL_R=2.54，LCL_R=0"}, {"n": 79, "ch": "p 管制圖計算", "q": "10批，每批 n=200，總不良品=120件；某批不良12件。計算：(1) p̄ (2) σ_p (3) UCL_p (4) LCL_p (5) 判斷該批是否失控。", "given": "k=10批, n=200, 總不良=120件, 特定批不良=12件", "steps": ["p̄ = 120 / (10×200) = 0.060", "σ_p = √(0.06×0.94/200) = √0.000282 ≈ 0.01679", "UCL_p = 0.060 + 3×0.01679 = 0.110", "LCL_p = 0.060 − 0.050 = 0.010", "特定批 p=12/200=0.060，0.010<0.060<0.110 → 在管制內 ✓"], "ans": "p̄=0.060，UCL_p=0.110，LCL_p=0.010；特定批在管制內"}, {"n": 80, "ch": "c 管制圖計算", "q": "20片PCB缺點數：3,5,2,4,6,3,4,2,5,3,4,3,2,6,4,5,3,4,2,4。計算 c̄、UCL_c、LCL_c，判斷6個缺點是否失控。", "given": "20片PCB缺點數：3,5,2,4,6,3,4,2,5,3,4,3,2,6,4,5,3,4,2,4", "steps": ["總缺點數=3+5+2+4+6+3+4+2+5+3+4+3+2+6+4+5+3+4+2+4=74", "c̄ = 74/20 = 3.70", "UCL_c = 3.70 + 3√3.70 = 3.70 + 3×1.924 = 9.47", "LCL_c = 3.70 − 5.77 = −2.07 → 取 0", "c=6 < UCL=9.47 → 在管制內 ✓"], "ans": "c̄=3.70，UCL_c=9.47，LCL_c=0；c=6在管制內"}, {"n": 81, "ch": "柏拉圖累積百分比", "q": "缺陷次數：A=85, B=42, C=28, D=15, E=10, 其他=20。計算各項百分比、累積百分比，依80/20法則找出重點改善項目。", "given": "A=85, B=42, C=28, D=15, E=10, 其他=20次", "steps": ["總次數 = 85+42+28+15+10+20 = 200", "各項%：A=42.5%, B=21.0%, C=14.0%, D=7.5%, E=5.0%, 其他=10%", "累積%：A=42.5%，A+B=63.5%，A+B+C=77.5%，A+B+C+D=85.0%", "依80%法則，前三項（A+B+C）累積77.5%，為重點改善對象"], "ans": "重點改善：A（42.5%）、B（21.0%）、C（14.0%），合計77.5%"}, {"n": 82, "ch": "直方圖組距計算", "q": "n=100筆，最大值=52.8，最小值=44.2。計算：(1) 建議組數 (2) 組距，並列出10個組別範圍（起始值=44.0）。", "given": "n=100, Max=52.8, Min=44.2, 起始值=44.0", "steps": ["建議組數 ≈ √n = √100 = 10 組", "全距 = 52.8 − 44.2 = 8.6", "組距 = 8.6 / 10 = 0.86 → 取 0.9", "組別：[44.0,44.9), [44.9,45.8), ... [52.1,53.0)，共10組"], "ans": "10組，組距=0.9，組別範圍[44.0~53.0)"}, {"n": 83, "ch": "二項分配計算", "q": "不良率 p=0.05，抽取 n=10件。計算：(1) P(X=0) (2) P(X=1) (3) P(X≤1)。（0.95¹⁰≈0.5987, 0.95⁹≈0.6302）", "given": "p=0.05, n=10；0.95¹⁰=0.5987, 0.95⁹=0.6302", "steps": ["P(X=0) = C(10,0)×0.05⁰×0.95¹⁰ = 1×0.5987 ≈ 59.87%", "P(X=1) = C(10,1)×0.05¹×0.95⁹ = 10×0.05×0.6302 = 0.3151 ≈ 31.51%", "P(X≤1) = 0.5987 + 0.3151 = 0.9138 ≈ 91.38%"], "ans": "P(0件)≈59.87%，P(1件)≈31.51%，P(≤1件)≈91.38%"}, {"n": 84, "ch": "泊松分配計算", "q": "設備每小時平均故障 λ=0.5 次。計算：(1) P(X=0) (2) P(X=1) (3) P(X≥2)。（e⁻⁰·⁵≈0.6065）", "given": "X~Poisson(λ=0.5), e⁻⁰·⁵=0.6065", "steps": ["P(X=0) = e⁻⁰·⁵ = 0.6065 ≈ 60.65%", "P(X=1) = 0.5×e⁻⁰·⁵ = 0.5×0.6065 = 0.3033 ≈ 30.33%", "P(X≥2) = 1−0.6065−0.3033 = 0.0902 ≈ 9.02%"], "ans": "P(0次)≈60.65%，P(1次)≈30.33%，P(≥2次)≈9.02%"}, {"n": 85, "ch": "超幾何分配計算", "q": "N=20件中含 D=4件不良，無放回抽取 n=5件。計算：(1) P(X=0) (2) P(X≥1)。（C(16,5)=4368, C(20,5)=15504）", "given": "N=20, D=4, n=5；C(16,5)=4368, C(20,5)=15504", "steps": ["P(X=0) = C(4,0)×C(16,5)/C(20,5) = 1×4368/15504 = 4368/15504", "P(X=0) = 0.2817 ≈ 28.17%", "P(X≥1) = 1−0.2817 = 0.7183 ≈ 71.83%"], "ans": "P(0件不良)≈28.17%，P(至少1件不良)≈71.83%"}, {"n": 86, "ch": "常態分配良率計算", "q": "X~N(μ=100, σ=2)，USL=105, LSL=95。計算：(1) Z值 (2) 良率 (3) 不良率（PPM）。（Φ(2.5)=0.9938）", "given": "μ=100, σ=2, USL=105, LSL=95；Φ(2.5)=0.9938", "steps": ["Z_upper = (105−100)/2 = 2.5；Z_lower = (100−95)/2 = 2.5", "良率 = 2×Φ(2.5)−1 = 2×0.9938−1 = 0.9876 = 98.76%", "不良率 = 1−0.9876 = 0.0124 = 1.24% = 12,400 PPM"], "ans": "良率=98.76%，不良率=1.24%（12,400 PPM）"}, {"n": 87, "ch": "t 信賴區間計算", "q": "n=25件，X̄=48.2mm，s=1.5mm，求 95% CI。（t₀.₀₂₅,₂₄=2.064）", "given": "n=25, X̄=48.2mm, s=1.5mm, t₀.₀₂₅,₂₄=2.064", "steps": ["SE = s/√n = 1.5/5 = 0.300", "ME = t×SE = 2.064×0.300 = 0.619 mm", "下界 = 48.2−0.619 = 47.58 mm", "上界 = 48.2+0.619 = 48.82 mm"], "ans": "95% CI = (47.58, 48.82) mm"}, {"n": 88, "ch": "抽樣允收機率計算", "q": "抽樣計畫 n=50, c=2，p=0.04。使用泊松近似（λ=np）計算允收機率 Pa。（e⁻²≈0.1353）", "given": "n=50, c=2, p=0.04; λ=np=2.0; e⁻²=0.1353", "steps": ["λ = 50×0.04 = 2.0（泊松近似）", "P(X=0) = e⁻² = 0.1353", "P(X=1) = 2×e⁻² = 0.2707", "P(X=2) = (4/2)×e⁻² = 0.2707", "Pa = 0.1353+0.2707+0.2707 = 0.6767 ≈ 67.7%"], "ans": "允收機率 Pa ≈ 67.7%"}, {"n": 89, "ch": "ATI 平均全檢數計算", "q": "承接Q88：n=50, c=2, N=1000, Pa=0.677。計算 ATI 並解讀。", "given": "n=50, N=1000, Pa=0.677", "steps": ["ATI = n + (1−Pa)(N−n)", "ATI = 50 + (1−0.677)×(1000−50)", "ATI = 50 + 0.323×950 = 50 + 306.9", "ATI ≈ 357件（約佔批量35.7%）"], "ans": "ATI ≈ 357件"}, {"n": 90, "ch": "Cp 與 Cpk 計算", "q": "μ=50.2, σ=0.5, USL=52, LSL=48。計算 Cp、CPU、CPL、Cpk，並判斷製程等級。", "given": "μ=50.2, σ=0.5, USL=52, LSL=48", "steps": ["Cp = (52−48)/(6×0.5) = 4/3.0 = 1.333", "CPU = (52−50.2)/(3×0.5) = 1.8/1.5 = 1.200", "CPL = (50.2−48)/(3×0.5) = 2.2/1.5 = 1.467", "Cpk = min(1.200, 1.467) = 1.200", "1.0 < Cpk=1.200 < 1.33 → 有能力但不符 IATF 要求（需≥1.33）"], "ans": "Cp=1.333，Cpk=1.200；不符 IATF 16949 要求（需Cpk≥1.33）"}, {"n": 91, "ch": "R̄/d₂ 估算製程標準差", "q": "n=4（d₂=2.059, D₄=2.282, D₃=0），15組R值：2,3,1,4,2,3,2,1,3,2,4,3,2,1,3。計算 R̄、σ̂、UCL_R、LCL_R。", "given": "n=4, d₂=2.059, D₄=2.282, D₃=0；R值：2,3,1,4,2,3,2,1,3,2,4,3,2,1,3", "steps": ["ΣR = 2+3+1+4+2+3+2+1+3+2+4+3+2+1+3 = 36", "R̄ = 36/15 = 2.40", "σ̂ = R̄/d₂ = 2.40/2.059 ≈ 1.17", "UCL_R = D₄×R̄ = 2.282×2.40 = 5.48；LCL_R = 0"], "ans": "R̄=2.40，σ̂≈1.17，UCL_R≈5.48，LCL_R=0"}, {"n": 92, "ch": "Pp 與 Ppk 長期績效", "q": "長期 X̄=25.3，s=1.2，USL=29, LSL=22。計算 Pp、Ppu、Ppl、Ppk，並判斷。", "given": "X̄=25.3, s=1.2, USL=29, LSL=22", "steps": ["Pp = (29−22)/(6×1.2) = 7/7.2 = 0.972", "Ppu = (29−25.3)/(3×1.2) = 3.7/3.6 = 1.028", "Ppl = (25.3−22)/(3×1.2) = 3.3/3.6 = 0.917", "Ppk = min(1.028, 0.917) = 0.917", "Ppk=0.917 < 1.0 → 長期績效不足，需改善"], "ans": "Pp=0.972，Ppk=0.917；長期製程績效不符要求（Ppk<1.0）"}, {"n": 93, "ch": "EWMA 統計量計算", "q": "λ=0.3，z₀=50.0，前四個觀測值：51, 50, 52, 53。逐步計算 z₁～z₄ 並觀察趨勢。", "given": "λ=0.3, z₀=50.0；x₁=51, x₂=50, x₃=52, x₄=53", "steps": ["z₁ = 0.3×51 + 0.7×50.0 = 15.30+35.00 = 50.30", "z₂ = 0.3×50 + 0.7×50.30 = 15.00+35.21 = 50.21", "z₃ = 0.3×52 + 0.7×50.21 = 15.60+35.15 = 50.75", "z₄ = 0.3×53 + 0.7×50.75 = 15.90+35.53 = 51.43", "觀察：z₁~z₄呈上升趨勢，製程均值可能向上漂移"], "ans": "z₁=50.30, z₂=50.21, z₃=50.75, z₄=51.43（上升趨勢）"}, {"n": 94, "ch": "ndc 量具鑑別力計算", "q": "GR&R=0.20，PV=0.60。計算 ndc，判斷量測系統是否足夠。", "given": "GR&R=0.20, PV=0.60", "steps": ["ndc = 1.41 × (PV / GR&R) = 1.41 × (0.60/0.20) = 1.41 × 3.0 = 4.23", "ndc = 4.23 < 5 → 量具鑑別力不足", "ndc<5 代表量測系統無法有效分辨≥5個不同類別的零件差異", "改善建議：提升量具解析度或降低 GR&R"], "ans": "ndc ≈ 4.23 < 5 → 量具鑑別力不足，需改善"}, {"n": 95, "ch": "抽樣計畫查表應用", "q": "N=500，GIS II，AQL=2.5%，正常單次抽樣（ANSI Z1.4）。確定：(1) 樣本代字 (2) n (3) Ac (4) Re。", "given": "N=500, GIS II, AQL=2.5%, 正常單次抽樣", "steps": ["N=281~500，GIS II → 樣本代字 = H", "代字H，正常單次抽樣表 → n = 50", "AQL=2.5% → Ac=3, Re=4", "結論：抽50件，不良≤3→允收；≥4→拒收"], "ans": "樣本代字H，n=50，Ac=3，Re=4"}, {"n": 96, "ch": "製程偏移對良率的影響", "q": "σ=0.3, USL=10.0, LSL=8.0；原居中μ=9.0，後偏移至μ=9.45。計算原始良率與偏移後上方不良率。（Φ(3.33)=0.9996, Φ(1.83)=0.9664）", "given": "σ=0.3, USL=10.0, LSL=8.0；居中μ=9.0；偏移後μ=9.45", "steps": ["居中：Z=(10−9)/0.3=3.33；良率=2×0.9996−1=99.92%", "偏移後：Z_upper=(10.0−9.45)/0.3=1.833", "P(X>USL) = 1−Φ(1.833) ≈ 1−0.9664 = 3.36%", "結論：偏移1.5σ後不良率從0.08%劇增至約3.36%（增加約42倍）"], "ans": "居中良率≈99.92%；偏移後上方不良率≈3.36%（增加約42倍）"}, {"n": 97, "ch": "製程改善 Cpk 提升計算", "q": "改善前：μ=82, σ=3.5, USL=92, LSL=74。σ降低25%後（σ_new=2.625），μ不變。計算改善前後 Cpk 及提升百分比。", "given": "μ=82, USL=92, LSL=74；改善前σ=3.5，改善後σ=2.625", "steps": ["改善前：CPU=(92−82)/10.5=0.952；CPL=(82−74)/10.5=0.762", "改善前 Cpk = min(0.952, 0.762) = 0.762", "改善後：CPU=(92−82)/7.875=1.270；CPL=(82−74)/7.875=1.016", "改善後 Cpk = min(1.270, 1.016) = 1.016", "提升% = (1.016−0.762)/0.762×100% ≈ 33.3%"], "ans": "改善前Cpk=0.762，改善後Cpk=1.016，提升33.3%"}, {"n": 98, "ch": "X̄-s 管制圖計算", "q": "n=10（B₃=0.284, B₄=1.716, A₃=0.975），5組：X̄: 24.5,25.1,24.8,25.3,24.9；s: 0.52,0.61,0.48,0.55,0.58。計算管制界限。", "given": "n=10, B₃=0.284, B₄=1.716, A₃=0.975；5組數據", "steps": ["X̄̄ = (24.5+25.1+24.8+25.3+24.9)/5 = 124.6/5 = 24.92", "s̄ = (0.52+0.61+0.48+0.55+0.58)/5 = 0.548", "UCL_X̄ = 24.92+0.975×0.548=25.45；LCL_X̄=24.39", "UCL_s = 1.716×0.548=0.940；LCL_s=0.284×0.548=0.156"], "ans": "UCL_X̄=25.45, LCL_X̄=24.39；UCL_s=0.940, LCL_s=0.156"}, {"n": 99, "ch": "滾動良率 RTY 計算", "q": "3站良率：Y₁=0.95, Y₂=0.92, Y₃=0.98，日產量1000件。計算：(1) RTY (2) 通過件數 (3) 若要RTY≥90%，Y₁需多少？", "given": "Y₁=0.95, Y₂=0.92, Y₃=0.98, 日產量1000件", "steps": ["RTY = 0.95×0.92×0.98 = 0.8565 ≈ 85.65%", "日通過件數 = 1000×0.8565 ≈ 857件", "Y₁×0.92×0.98 ≥ 0.90 → Y₁ ≥ 0.90/0.9016 = 0.9982", "即 Y₁ 需達 99.82%"], "ans": "RTY≈85.65%，通過857件；Y₁需≥99.82%才能使RTY≥90%"}, {"n": 100, "ch": "製程能力與σ水準綜合", "q": "μ=500, σ=10, USL=530, LSL=470。計算：(1) Cp (2) Cpk (3) σ水準 (4) 達6σ所需σ值。", "given": "μ=500, σ=10, USL=530, LSL=470", "steps": ["Cp = (530−470)/(6×10) = 60/60 = 1.0", "CPU = CPL = (530−500)/(3×10) = 1.0；Cpk = 1.0（居中）", "3σ水準，不良率≈0.27%（2,700 PPM）", "達6σ（Cpk=2.0）：(530−500)/(3σ)=2.0 → σ=5.0", "即 σ 需從 10 降至 5（降低50%）"], "ans": "Cp=Cpk=1.0（3σ水準）；達6σ需σ降至5.0（不良率從2700 PPM→0.0002 PPM）"},{"n": 261, "ch": "品質成本結構分析", "q": "某工廠月銷售額 NT$5,000,000；品質成本：預防$80,000、鑑定$150,000、內部失敗$220,000、外部失敗$130,000。計算：(1) 總品質成本占銷售額% (2) COPQ占銷售額% (3) 預防：鑑定：失敗比例。", "given": "銷售額$5,000K, 預防$80K, 鑑定$150K, 內失敗$220K, 外失敗$130K", "steps": ["總品質成本 = 80+150+220+130 = NT$580,000", "總品質成本率 = 580,000/5,000,000 = 11.6%", "COPQ = 220,000+130,000 = NT$350,000", "COPQ率 = 350,000/5,000,000 = 7.0%", "預防:鑑定:失敗 = 80:150:350 = 1:1.875:4.375", "→預防成本比例低，建議增加預防投入以降低失敗成本"], "ans": "總品質成本率11.6%，COPQ率7.0%；預防:鑑定:失敗=1:1.9:4.4（失敗成本比例過高，應加強預防）"}, {"n": 262, "ch": "威布爾可靠度計算", "q": "元件壽命服從Weibull分配，β=2.5（形狀），η=1000小時（尺度）。計算：(1) t=500hr的可靠度R(500) (2) MTTF（η×Γ(1+1/β)，Γ(1.4)≈0.887）。", "given": "Weibull: β=2.5, η=1000 hr；Γ(1.4)=0.887", "steps": ["R(t) = exp[-(t/η)^β]", "R(500) = exp[-(500/1000)^2.5] = exp[-(0.5)^2.5]", "(0.5)^2.5 = 0.5² × 0.5^0.5 = 0.25 × 0.707 = 0.1768", "R(500) = exp(-0.1768) ≈ 0.8380 = 83.8%", "MTTF = η × Γ(1+1/β) = 1000 × Γ(1.4) = 1000 × 0.887 = 887 hr"], "ans": "R(500hr)≈83.8%；MTTF≈887小時"}, {"n": 263, "ch": "串並聯可靠度計算", "q": "系統由3個元件組成：A與B並聯後，再與C串聯。R_A=0.90，R_B=0.85，R_C=0.95。計算：(1) A-B並聯可靠度 (2) 系統可靠度 (3) 若需系統R≥0.90，C需提升至多少？", "given": "R_A=0.90, R_B=0.85, R_C=0.95", "steps": ["R_AB（並聯） = 1-(1-0.90)(1-0.85) = 1-0.10×0.15 = 1-0.015 = 0.985", "系統R = R_AB × R_C = 0.985 × 0.95 = 0.9358 = 93.58%", "若需系統R≥0.90：R_C_new = 0.90/0.985 = 0.9137", "即 R_C 只需≥91.37%（目前95%已滿足）"], "ans": "R_AB=98.5%，系統R≈93.6%；C需R_C≥91.4%（現況已達）"}, {"n": 264, "ch": "MTBF與可用性計算", "q": "某設備MTBF=2000小時，MTTR=4小時，每小時維修成本NT$500，每小時停機損失NT$3000。計算：(1) 可用性A (2) 月（720hr）期望停機時間 (3) 月停機損失。", "given": "MTBF=2000hr, MTTR=4hr, 月=720hr", "steps": ["A = MTBF/(MTBF+MTTR) = 2000/(2000+4) = 0.998 = 99.80%", "月故障次數 = 720/2000 = 0.36次（期望）", "月停機時間 = 0.36次 × 4hr/次 = 1.44 hr", "月停機損失 = 1.44 × NT$3,000 = NT$4,320", "維修成本 = 1.44 × NT$500 = NT$720"], "ans": "可用性99.80%，月期望停機1.44hr，停機損失NT$4,320"}, {"n": 265, "ch": "樣本大小計算（比例）", "q": "估計工廠不良率，需在95%信賴水準下，估計誤差E≤1.5%。使用保守估計p=0.5。計算所需樣本數n。（z=1.96）", "given": "E=0.015, p=0.5（保守）, z=1.96, α=5%", "steps": ["n = z² × p(1-p) / E²", "n = (1.96)² × 0.5 × 0.5 / (0.015)²", "n = 3.8416 × 0.25 / 0.000225", "n = 0.9604 / 0.000225", "n = 4,268.4 → 取 n = 4,269"], "ans": "所需樣本數 n = 4,269件"}, {"n": 266, "ch": "樣本大小計算（均值）", "q": "估計螺絲拉力均值，σ=5N，需在95% CI下誤差E≤0.5N，計算所需n；若σ未知，已知前次樣本s=4.8N，n是否有變化？", "given": "σ=5N（或s=4.8N）, E=0.5N, z=1.96", "steps": ["n = (z×σ/E)² = (1.96×5/0.5)² = (19.6)² = 384.16 → n=385", "若用s=4.8：n = (1.96×4.8/0.5)² = (18.816)² = 354.04 → n=355", "實務上建議用已知σ較保守：n=385", "注意：用s估計時常用t分配迭代求解（因σ未知）"], "ans": "σ已知：n=385；用s=4.8估計：n=355（建議取385以較保守）"}, {"n": 267, "ch": "OC 曲線點計算", "q": "抽樣計畫 n=100, c=2，計算在 p=2% 時的允收機率 Pa（使用泊松近似）。（e⁻²=0.1353）", "given": "n=100, c=2, p=0.02；λ=np=2.0；e⁻²=0.1353", "steps": ["λ = 100 × 0.02 = 2.0（泊松近似）", "P(X=0) = e⁻² = 0.1353", "P(X=1) = λe⁻² = 2×0.1353 = 0.2707", "P(X=2) = (λ²/2!)×e⁻² = (4/2)×0.1353 = 0.2707", "Pa = P(X≤2) = 0.1353+0.2707+0.2707 = 0.6767 = 67.67%"], "ans": "Pa ≈ 67.7%（此批不良率2%的允收機率）"}, {"n": 268, "ch": "AOQ 與 AOQL 計算", "q": "承接前題：n=100, c=2, N=500, p=2%, Pa=67.7%。計算：(1) AOQ (2) 假設已知 AOQL=0.84%（最大AOQ值）在哪個p值附近，實際AOQ與AOQL的意義。", "given": "n=100, c=2, N=500, p=0.02, Pa=0.677", "steps": ["AOQ ≈ p×Pa×(N-n)/N = 0.02×0.677×(500-100)/500", "AOQ = 0.02×0.677×0.80 = 0.01083 ≈ 1.08%", "AOQL≈0.84%：這是整條AOQ曲線的最大值", "當p>AOQL對應的p時，AOQ反而隨p增大而下降（因更多批被拒→全數替換）", "此計畫保證長期出廠品質不超過0.84%"], "ans": "AOQ≈1.08%（注：因公式簡化，實際含複雜校正）；AOQL≈0.84%=長期最差出廠品質保證"}, {"n": 269, "ch": "雙次抽樣 ASN 計算", "q": "雙次抽樣：n₁=60, c₁=1（允收），r₁=4（拒收），n₂=60, c₂=3（總累積）。p=0.03時（泊松：λ₁=1.8，e⁻¹·⁸=0.165）。計算Pa₁、Pr₁、ASN。", "given": "n₁=60, c₁=1, r₁=4；p=0.03；λ₁=n₁p=1.8；e⁻¹·⁸=0.165", "steps": ["P(X=0|λ=1.8) = 0.165；P(X=1)=1.8×0.165=0.297", "Pa₁ = P(X≤1) = 0.165+0.297 = 0.462", "P(X≥4) = 1-P(X≤3)≈1-0.891=0.109（查表或計算）", "第一次結論機率：Pa₁+Pr₁ = 0.462+0.109=0.571", "進行第二次抽樣機率 = 1-0.571=0.429", "ASN = n₁ + n₂×(1-Pa₁-Pr₁) = 60+60×0.429 = 60+25.7 = 85.7"], "ans": "ASN≈85.7（介於n₁=60和n₁+n₂=120之間，對此品質水準比單次100有效率）"}, {"n": 270, "ch": "製程能力改善目標計算", "q": "現況：μ=52.0, σ=2.0, USL=58, LSL=46。目標：Cpk≥1.50。計算：(1) 現況Cpk (2) 維持μ不變，σ需降至多少才達Cpk=1.50？", "given": "μ=52.0, σ=2.0, USL=58, LSL=46", "steps": ["CPU = (58-52)/(3×2) = 6/6 = 1.000", "CPL = (52-46)/(3×2) = 6/6 = 1.000", "現況Cpk = min(1.000,1.000) = 1.000", "目標：Cpk=1.50，μ=52（對稱，CPU=CPL）", "(58-52)/(3×σ_new) = 1.50", "σ_new = 6/(3×1.50) = 6/4.5 = 1.333", "σ需從2.0降至1.333（降低33.4%）"], "ans": "現況Cpk=1.000；σ需降至1.333（降33.4%）才能達Cpk=1.50"}, {"n": 271, "ch": "Cp 與 Cpk 差距分析", "q": "製程：USL=100, LSL=88, μ=97.5, σ=1.5。計算Cp、Cpk，及若均值校正至中心值時Cpk的改善量。", "given": "USL=100, LSL=88, σ=1.5, μ=97.5", "steps": ["Cp = (100-88)/(6×1.5) = 12/9 = 1.333", "CPU = (100-97.5)/(3×1.5) = 2.5/4.5 = 0.556", "CPL = (97.5-88)/(3×1.5) = 9.5/4.5 = 2.111", "現況Cpk = min(0.556, 2.111) = 0.556", "若μ→中心值94：CPU=CPL=(100-94)/4.5=6/4.5=1.333", "改善後Cpk=1.333（與Cp相同，提升139%）"], "ans": "現況Cp=1.333，Cpk=0.556（嚴重偏移）；均值校正至中心→Cpk=1.333，提升140%"}, {"n": 272, "ch": "標準差估計與比較", "q": "兩組製程A、B各量測25件，s_A=0.42，s_B=0.28。檢定兩製程變異是否相同（α=5%）。F臨界值F(0.025,24,24)=2.27。", "given": "n_A=n_B=25, s_A=0.42, s_B=0.28, F_crit=2.27, α=5%", "steps": ["H₀: σ_A²=σ_B²，H₁: σ_A²≠σ_B²（雙尾）", "F = s_A²/s_B² = (0.42)²/(0.28)² = 0.1764/0.0784 = 2.25", "自由度 df₁=df₂=24", "F_calc=2.25 < F_crit=2.27（雙尾臨界值）", "結論：無法拒絕H₀，兩製程變異差異統計上不顯著（邊際情況）"], "ans": "F=2.25 < F_crit=2.27，無法拒絕H₀，兩製程變異無統計顯著差異（但很接近臨界值，需監控）"}, {"n": 273, "ch": "單因子 ANOVA 計算", "q": "三台機台各量測4件尺寸：機台A：[10.1, 9.9, 10.2, 10.0]，機台B：[10.5, 10.3, 10.4, 10.6]，機台C：[9.8, 10.0, 9.9, 10.1]。計算：(1) 各機台均值 (2) 判斷機台間是否有顯著差異（F_crit(0.05,2,9)=4.26）。", "given": "n=4每台，k=3台；F_crit(2,9)=4.26", "steps": ["X̄_A=(10.1+9.9+10.2+10.0)/4=10.05", "X̄_B=(10.5+10.3+10.4+10.6)/4=10.45", "X̄_C=(9.8+10.0+9.9+10.1)/4=9.95", "Grand Mean X̄̄=(10.05+10.45+9.95)/3=10.15", "SS_between = 4[(10.05-10.15)²+(10.45-10.15)²+(9.95-10.15)²] = 4[0.01+0.09+0.04]=0.56", "SS_within = 計算各組組內SS和≈0.16", "MS_between=0.56/2=0.28；MS_within=0.16/9=0.0178", "F=0.28/0.0178=15.73 > 4.26 → 拒絕H₀"], "ans": "X̄_A=10.05, X̄_B=10.45, X̄_C=9.95；F≈15.7 > 4.26，三機台均值有顯著差異（p<0.05）"}, {"n": 274, "ch": "X̄-s 管制圖計算", "q": "n=8（A₃=1.099, B₃=0.185, B₄=1.815），6組數據：X̄：24.5,25.2,24.8,25.0,24.7,25.1；s：0.45,0.52,0.48,0.50,0.47,0.53。計算X̄圖和s圖的管制界限。", "given": "n=8, A₃=1.099, B₃=0.185, B₄=1.815；X̄和s資料各6組", "steps": ["X̄̄ = (24.5+25.2+24.8+25.0+24.7+25.1)/6 = 149.3/6 = 24.883", "s̄ = (0.45+0.52+0.48+0.50+0.47+0.53)/6 = 2.95/6 = 0.4917", "UCL_X̄ = 24.883+1.099×0.4917 = 24.883+0.540 = 25.423", "LCL_X̄ = 24.883-0.540 = 24.343", "UCL_s = 1.815×0.4917 = 0.892", "LCL_s = 0.185×0.4917 = 0.091"], "ans": "UCL_X̄=25.42，LCL_X̄=24.34；UCL_s=0.892，LCL_s=0.091"}, {"n": 275, "ch": "u 管制圖計算（變動n）", "q": "5批布匹，面積（n）和缺點數：批1(n=20,c=8)，批2(n=25,c=12)，批3(n=18,c=6)，批4(n=22,c=9)，批5(n=15,c=5)。計算ū、各批UCL_u，並判斷批2是否失控。", "given": "各批n和c如上", "steps": ["總缺點=8+12+6+9+5=40；總面積=20+25+18+22+15=100", "ū = 40/100 = 0.40（缺點/單位面積）", "各批UCL_u = ū + 3√(ū/nᵢ)", "批2：UCL = 0.40+3√(0.40/25)=0.40+3×0.1265=0.40+0.379=0.779", "批2 u₂ = 12/25 = 0.480 < UCL=0.779 → 在管制內 ✓", "批1：UCL=0.40+3√(0.40/20)=0.40+0.424=0.824；u₁=8/20=0.400 ✓"], "ans": "ū=0.40；批2：u=0.48 < UCL=0.779，在管制內"}, {"n": 276, "ch": "移動全距管制圖計算", "q": "個別值X圖：15個觀測值（略），X̄=42.3，MR̄=1.80（d₂=1.128，D₄=3.267）。計算：(1) X圖的UCL、LCL (2) MR圖的UCL (3) σ̂估計值。", "given": "X̄=42.3, MR̄=1.80, d₂=1.128, D₄=3.267", "steps": ["σ̂ = MR̄/d₂ = 1.80/1.128 = 1.596", "UCL_X = X̄ + 3σ̂ = 42.3+3×1.596 = 42.3+4.787 = 47.09", "LCL_X = 42.3-4.787 = 37.51", "UCL_MR = D₄×MR̄ = 3.267×1.80 = 5.88", "LCL_MR = 0（D₃不適用，n=2時不設下界限）"], "ans": "σ̂≈1.60；UCL_X=47.09，LCL_X=37.51；UCL_MR=5.88"}, {"n": 277, "ch": "線性迴歸與預測", "q": "量測5組(X,Y)資料：X=[1,2,3,4,5]，Y=[2.1,3.9,6.2,8.0,9.8]。計算：(1) 迴歸方程 Ŷ=a+bX (2) 當X=6時預測Y。（ΣX=15,ΣY=30,ΣXY=103.2,ΣX²=55,n=5）", "given": "n=5,ΣX=15,ΣY=30,ΣXY=103.2,ΣX²=55", "steps": ["b = (nΣXY-ΣXΣY)/(nΣX²-(ΣX)²)", "b = (5×103.2-15×30)/(5×55-225) = (516-450)/(275-225) = 66/50 = 1.32", "X̄=3，Ȳ=6；a = Ȳ-b×X̄ = 6-1.32×3 = 6-3.96 = 2.04", "迴歸方程：Ŷ = 2.04 + 1.32X", "X=6時：Ŷ = 2.04+1.32×6 = 2.04+7.92 = 9.96"], "ans": "Ŷ = 2.04 + 1.32X；X=6時預測Y≈9.96"}, {"n": 278, "ch": "信賴區間比較與假設檢定", "q": "生產線A（n=36, X̄=120.5, s=3.6）與生產線B（n=36, X̄=118.8, s=4.2），α=5%。檢定兩線均值是否有顯著差異。（z₀.₀₂₅=1.96）", "given": "A: n=36,X̄=120.5,s=3.6；B: n=36,X̄=118.8,s=4.2；z=1.96", "steps": ["H₀: μ_A=μ_B；H₁: μ_A≠μ_B（雙尾）", "Z_calc = (X̄_A-X̄_B)/√(s_A²/n_A+s_B²/n_B)", "= (120.5-118.8)/√(3.6²/36+4.2²/36)", "= 1.7/√(0.36+0.49) = 1.7/√0.85 = 1.7/0.922 = 1.843", "|Z_calc|=1.843 < z_crit=1.96 → 無法拒絕H₀", "結論：兩生產線均值差異統計上不顯著（α=5%）"], "ans": "Z=1.84 < 1.96，不拒絕H₀，兩線均值無顯著差異（但差距明顯，建議增加n）"}, {"n": 279, "ch": "製程偏移檢測：CUSUM計算", "q": "製程目標μ₀=50，σ=2，CUSUM決策參數k=1（參考值），h=4（決策界限）。前7個觀測值：51,52,50,53,52,51,54。計算上方CUSUM C⁺ᵢ（從C⁺₀=0開始），判斷是否失控。", "given": "μ₀=50, k=1, h=4；x₁~x₇: 51,52,50,53,52,51,54", "steps": ["C⁺ᵢ = max(0, xᵢ-μ₀-k+C⁺ᵢ₋₁) = max(0,xᵢ-51+C⁺ᵢ₋₁)", "C⁺₁=max(0,51-51+0)=max(0,0)=0", "C⁺₂=max(0,52-51+0)=1", "C⁺₃=max(0,50-51+1)=0", "C⁺₄=max(0,53-51+0)=2", "C⁺₅=max(0,52-51+2)=3", "C⁺₆=max(0,51-51+3)=3", "C⁺₇=max(0,54-51+3)=6", "C⁺₇=6 > h=4 → 第7點偵測到上移，製程失控 ✓"], "ans": "C⁺: 0,1,0,2,3,3,6 → 第7點C⁺=6>h=4，偵測到製程均值上移，失控"}, {"n": 280, "ch": "測試常態性：偏態與峰態", "q": "30個樣本計算得：偏態係數g₁=1.52，峰態係數g₂=0.85（超峰態）。判斷：(1) 分配形狀 (2) 是否適合建立標準Shewhart管制圖 (3) 建議處理方式。", "given": "n=30, 偏態g₁=1.52, 峰態g₂=0.85", "steps": ["g₁=1.52>0：右偏（正偏）分配，有長右尾", "g₂=0.85>0：尖峰（Leptokurtic），比常態更集中且尾部更厚", "標準常態：g₁=0, g₂=0（超峰態）", "n=30時偏態標準誤≈√(6/30)=0.447；|1.52/0.447|=3.4>2 → 顯著偏態", "Shewhart圖假設常態 → 可能誤判（界限不準確）", "建議：Box-Cox轉換（λ<1）、或使用非常態製程能力方法"], "ans": "明顯右偏（g₁=1.52顯著）+尖峰；需轉換（如Box-Cox）才能有效使用Shewhart圖"}, {"n": 281, "ch": "製程改善後樣本量計算", "q": "改善前不良率p₁=8%，改善後期望p₂=3%，α=5%，β=10%。計算驗證改善效果所需的最小樣本數n。（z_α=1.645，z_β=1.28）", "given": "p₁=0.08, p₂=0.03, z_α=1.645（單尾）, z_β=1.28", "steps": ["p̄ = (p₁+p₂)/2 = 0.055", "n = [z_α√(2p̄(1-p̄))+z_β√(p₁(1-p₁)+p₂(1-p₂))]²/(p₁-p₂)²", "分子第一項: 1.645×√(2×0.055×0.945)=1.645×√(0.1040)=1.645×0.3224=0.530", "分子第二項: 1.28×√(0.08×0.92+0.03×0.97)=1.28×√(0.0736+0.0291)=1.28×√0.1027=1.28×0.3204=0.410", "(0.530+0.410)²/(0.05)² = (0.940)²/0.0025=0.8836/0.0025=353.4", "n ≈ 354 件"], "ans": "驗證改善成效所需最小樣本數≈354件（建議取400件較保守）"}, {"n": 282, "ch": "GR&R 完整計算", "q": "GR&R研究：2位操作員×5個零件×2次重複，操作員A：量測均值X̄_A=25.20，操作員B：X̄_B=24.95；5個零件極差最大值為R̄_max=1.8，R̄（所有20次）=0.42（d₂(2)=1.128，d₂(2)=1.128，k₁=3.65零件間）。計算%GR&R（TV=估計=1.8，製程6σ=10.8）。", "given": "R̄_operators=0.42,操作員差距=|25.20-24.95|=0.25,TV=1.8（給定）,d₂=1.128", "steps": ["EV（重複性）= R̄×k₁ = 0.42×3.65 = 1.533（k₁依2人2次查表）", "AV（再現性）= √[(操作員差距×k₂)²-EV²/nr]；k₂≈2.70", "= √[(0.25×2.70)²-1.533²/(5×2)] = √[0.455-0.235] = √0.220=0.469", "GR&R = √(EV²+AV²) = √(1.533²+0.469²)=√(2.350+0.220)=√2.570=1.603", "%GR&R = GR&R/TV = 1.603/1.8×100% = 89.1%", "判斷：%GR&R=89.1% >> 30% → 量測系統嚴重不合格！"], "ans": "%GR&R≈89%（嚴重不合格），量測系統變異幾乎等同製程變異，須立即改善量具"}, {"n": 283, "ch": "田口 SN 比計算", "q": "望目特性（Nominal-the-Best），目標值T=50，3次重複：y₁=49.5，y₂=50.3，y₃=50.8。計算：(1) ȳ (2) s (3) SN比（望目型：SN=10log(ȳ²/s²)）。", "given": "T=50, y₁=49.5, y₂=50.3, y₃=50.8", "steps": ["ȳ = (49.5+50.3+50.8)/3 = 150.6/3 = 50.20", "偏差：-0.70, +0.10, +0.60；SS=(0.49+0.01+0.36)=0.86", "s² = 0.86/(3-1) = 0.43；s = 0.656", "SN = 10×log(ȳ²/s²) = 10×log(50.20²/0.43)", "= 10×log(2520/0.43) = 10×log(5860) = 10×3.768 = 37.68 dB", "SN越大=信噪比越高=品質越穩定"], "ans": "ȳ=50.20，s=0.656，SN比≈37.68 dB"}, {"n": 284, "ch": "信賴區間（比例）計算", "q": "n=200件，發現12件不良。計算：(1) 樣本不良率p̂ (2) 95% CI（使用Wilson或常態近似）(3) 是否可推論母體不良率<10%？（z=1.96）", "given": "n=200, x=12（不良），z=1.96", "steps": ["p̂ = 12/200 = 0.060", "SE = √(p̂(1-p̂)/n) = √(0.06×0.94/200) = √0.000282 = 0.01679", "95% CI = p̂ ± z×SE = 0.060 ± 1.96×0.01679 = 0.060 ± 0.033", "95% CI = (0.027, 0.093)", "CI上界0.093 < 0.10 → 有95%把握母體不良率<10%"], "ans": "p̂=6%，95% CI=(2.7%, 9.3%)；有95%信心推論母體不良率<10%"}, {"n": 285, "ch": "超幾何vs二項分配比較", "q": "批量N=100，不良D=5。(1) 無放回抽n=10：P(X=0)用超幾何計算。(2) 用二項近似計算P(X=0)。(3) 比較兩者誤差。（C(95,10)=7.5億，C(100,10)=17.3億，0.95¹⁰=0.599）", "given": "N=100, D=5, n=10；C(95,10)≈7.5億，C(100,10)≈17.3億", "steps": ["超幾何：P(X=0)=C(5,0)×C(95,10)/C(100,10)=1×7.5億/17.3億=0.4335≈43.4%", "二項近似：p=5/100=0.05，P(X=0)=(1-0.05)¹⁰=0.95¹⁰=0.5987≈59.9%", "差異：|43.4%-59.9%|=16.5%（誤差顯著）", "n/N=10%（>5%）→母體有限修正大，超幾何更準；二項誤差大"], "ans": "超幾何P(0)≈43.4%；二項近似≈59.9%；差異16.5%。n/N=10%，應用超幾何"}, {"n": 286, "ch": "卡方檢定（適配性）", "q": "骰子投擲600次，觀測次數：1點=95，2點=102，3點=98，4點=105，5點=100，6點=100。α=5%，χ²(0.05,5)=11.07。檢定骰子是否公平。", "given": "n=600，6面各期望=100；觀測：95,102,98,105,100,100；χ²_crit=11.07", "steps": ["期望E = 600/6 = 100（每面）", "χ² = Σ(O-E)²/E", "= (95-100)²/100+(102-100)²/100+(98-100)²/100+(105-100)²/100+(100-100)²/100+(100-100)²/100", "= 25/100+4/100+4/100+25/100+0+0", "= 0.25+0.04+0.04+0.25+0+0 = 0.58", "χ²_calc=0.58 << χ²_crit=11.07 → 不拒絕H₀"], "ans": "χ²=0.58 << 11.07，不拒絕H₀，骰子可視為公平"}, {"n": 287, "ch": "製程穩定性統計檢定（Run Test）", "q": "管制圖上連續15個點是否隨機：+,-,+,+,-,-,+,-,+,+,+,-,-,+,-（+代表中心線以上，-以下）。計算遊程數R，判斷是否有非隨機模式（n₁=8正，n₂=7負，R_lower=5，R_upper=13，α=5%）。", "given": "n₁=8（+），n₂=7（-）；Run test臨界值R_L=5，R_U=13", "steps": ["序列：+,-,+,+,-,-,+,-,+,+,+,-,-,+,-", "計算遊程數（連續相同符號的串）：", "(+),(-),(++),(--),(+),(-),(+++),(--),(+),(-)=10個遊程", "R=10，5≤10≤13 → 無法拒絕隨機性假設", "結論：管制圖上的點排列沒有非隨機模式的統計證據"], "ans": "R=10，落在[5,13]區間內，不拒絕隨機性假設，序列無非隨機模式"}, {"n": 288, "ch": "卡方檢定（獨立性）", "q": "調查200人，品質培訓（受訓/未受訓）vs產品合格（是/否）：受訓合格90，受訓不合格10；未受訓合格70，未受訓不合格30。計算χ²，判斷培訓與合格率是否獨立。（χ²_crit(0.05,1)=3.84）", "given": "受訓：合格90，不合格10；未受訓：合格70，不合格30；χ²_crit=3.84", "steps": ["列聯表：受訓合格90、不合格10、小計100；未受訓合格70、不合格30、小計100", "邊際：合格=160，不合格=40，總n=200", "期望：E(受訓合格)=100×160/200=80；E(受訓不合格)=100×40/200=20", "E(未受訓合格)=80；E(未受訓不合格)=20", "χ²=(90-80)²/80+(10-20)²/20+(70-80)²/80+(30-20)²/20", "= 100/80+100/20+100/80+100/20=1.25+5+1.25+5=12.5", "12.5 > 3.84 → 拒絕獨立性假設"], "ans": "χ²=12.5 > 3.84，拒絕獨立假設；品質培訓與合格率有顯著關聯（培訓有效）"}, {"n": 289, "ch": "量測不確定度合成", "q": "長度量測不確定度來源：(1) 量具重複性u₁=0.02mm (2) 校正偏差u₂=0.01mm (3) 溫度影響u₃=0.015mm。假設獨立，計算：(1) 合成標準不確定度u_c (2) 擴充不確定度U（k=2）。", "given": "u₁=0.02, u₂=0.01, u₃=0.015（mm），k=2", "steps": ["u_c = √(u₁²+u₂²+u₃²)", "= √(0.02²+0.01²+0.015²)", "= √(0.0004+0.0001+0.000225)", "= √0.000725 = 0.02693 mm", "U = k × u_c = 2 × 0.02693 = 0.05386 ≈ 0.054 mm", "量測結果表示：L = X ± 0.054 mm（95%信賴水準，k=2）"], "ans": "u_c≈0.027mm，U=0.054mm（k=2，95%信賴水準）"}, {"n": 290, "ch": "FMEA 改善前後比較", "q": "失效模式X：S=8，O=7，D=6，RPN=336。實施改善A（O降至4）和改善B（D降至3）後，計算各自新RPN和總降幅，選擇最佳改善方案（成本相同）。", "given": "原RPN=S×O×D=8×7×6=336；改善A：O→4；改善B：D→3", "steps": ["改善A後：RPN_A = 8×4×6 = 192", "改善B後：RPN_B = 8×7×3 = 168", "RPN降幅：A降144（43%），B降168（50%）", "改善B（提升偵測能力）效果更佳", "同時實施A+B：RPN = 8×4×3 = 96（降幅71%）", "建議：先實施B（降幅更大），再評估是否需要A"], "ans": "改善A:RPN=192（降43%）；改善B:RPN=168（降50%）；B效果更佳；若同時實施RPN=96（降71%）"}, {"n": 291, "ch": "柏拉圖與改善優先化", "q": "某月缺陷：刮傷=185次，缺料=92次，尺寸超差=68次，氣泡=45次，變色=30次，其他=22次。計算各項%及累積%。(1) 依80%原則，找出重點項目 (2) 改善刮傷可減少50%，改善後柏拉圖如何變化？", "given": "刮傷185，缺料92，尺寸超差68，氣泡45，變色30，其他22", "steps": ["總計=185+92+68+45+30+22=442", "各%：刮傷41.9%，缺料20.8%，尺寸15.4%，氣泡10.2%，變色6.8%，其他5.0%", "累積%：41.9→62.7→78.1→88.3→95.0→100%", "80%法則：前三項（刮傷+缺料+尺寸）累積78.1%→重點改善項", "改善刮傷50%：刮傷→93次；新總計=357；刮傷新%=26.1%", "改善後第一位仍可能是缺料或刮傷，需重新排列"], "ans": "重點項目：刮傷(41.9%)、缺料(20.8%)、尺寸超差(15.4%)累計78.1%；刮傷改善50%後，缺料躍升為第一"}, {"n": 292, "ch": "RTY 與 DPU 計算", "q": "4個製程站，每站良率：Y₁=0.96，Y₂=0.98，Y₃=0.94，Y₄=0.99。計算：(1) RTY (2) DPU（defects per unit）(3) 若要RTY≥95%，找出最差站並計算其需要提升至多少。", "given": "Y₁=0.96, Y₂=0.98, Y₃=0.94, Y₄=0.99", "steps": ["RTY = 0.96×0.98×0.94×0.99 = 0.9600×0.9800×0.94×0.99", "= 0.9408×0.94×0.99 = 0.8843×0.99 ≈ 0.8755 = 87.55%", "DPU = -ln(RTY) = -ln(0.8755) ≈ 0.133（每件平均0.133個缺陷）", "最差站：Y₃=0.94（94%）；其他Y=0.96×0.98×0.99=0.9310", "要RTY≥0.95：Y₃_new ≥ 0.95/0.9310 = 1.020 → 不可能靠Y₃單獨達到", "需同時改善多站；即使Y₃=100%，RTY=0.9310<95%→Y₃不是唯一限制"], "ans": "RTY≈87.55%，DPU≈0.133；即使Y₃=100%，RTY仍只有93.1%，需同時改善多站"}, {"n": 293, "ch": "Pre-Control 方法應用", "q": "規格USL=20.0，LSL=16.0，目標T=18.0。Pre-Control分區：(1) 計算綠/黃/紅區界限 (2) 連續量測：18.5，17.8，19.6，17.2，18.8，判斷每點屬於哪區 (3) 說明操作決策規則。", "given": "USL=20.0，LSL=16.0，T=18.0", "steps": ["Pre-Control分區：規格寬=20-16=4.0", "綠區（中間50%）：T±25%規格寬=18.0±1.0=[17.0,19.0]", "黃區上：[19.0,20.0]；黃區下：[16.0,17.0]", "紅區：>20.0或<16.0", "各點：18.5→綠，17.8→綠，19.6→黃上，17.2→黃下，18.8→綠", "規則：初次生產連5點綠→開始生產；生產中1點黃=繼續；2連續黃（同側）=調整；任1點紅=立即停線"], "ans": "綠區[17,19]，黃區[16,17]和[19,20]；量測點：綠、綠、黃上、黃下、綠；第3點和第4點在不同側黃區，不觸發停線規則"}, {"n": 294, "ch": "接收抽樣計畫設計", "q": "顧客要求：AQL=0.65%（生產者風險α≤5%），LTPD=4.0%（消費者風險β≤10%）。使用泊松近似，設計單次抽樣計畫（n, c）。（參考：c=1時，n≈76；c=2時，n≈153；驗證β條件）", "given": "AQL=0.0065, LTPD=0.04, α≤0.05, β≤0.10", "steps": ["對於c=1：n×AQL≈0.35（使α≈5%） → n≈0.35/0.0065=53.8≈54", "驗證β：λ_LTPD=54×0.04=2.16，Pa=e⁻²·¹⁶(1+2.16)=0.116×3.16=0.367>0.10 ✗", "c=2：n×AQL≈0.82 → n=0.82/0.0065=126", "λ_LTPD=126×0.04=5.04；Pa=e⁻⁵·⁰⁴(1+5.04+12.7)=0.0065×18.74=0.122 ✗", "c=3：n×AQL≈1.37→n=211；λ_LTPD=211×0.04=8.44；Pa≈Poisson(≤3,8.44)≈0.032<0.10 ✓"], "ans": "建議方案：c=3，n≈211（滿足α≤5%在AQL，β≈3%<10%在LTPD）"}, {"n": 295, "ch": "EWMA 管制界限計算", "q": "EWMA: λ=0.20，σ=1.5，目標μ₀=100，L=3（控制界限係數）。計算第1、2、3次觀測後的σ_EWMA（穩態和初始）及UCL。（穩態：σ_EWMA=σ√(λ/(2-λ))）", "given": "λ=0.20, σ=1.5, μ₀=100, L=3", "steps": ["穩態σ_EWMA = σ×√(λ/(2-λ)) = 1.5×√(0.20/1.80) = 1.5×√0.1111 = 1.5×0.3333 = 0.500", "穩態UCL = 100+3×0.500 = 101.5；LCL = 98.5", "初始（第i點）：σᵢ=σ√(λ/(2-λ)×(1-(1-λ)^(2i)))", "i=1：σ₁=1.5×√(0.1111×(1-0.64))=1.5×√0.040=1.5×0.200=0.300；UCL₁=100.9", "i=2：σ₂=1.5×√(0.1111×(1-0.41))=1.5×√0.065=1.5×0.256=0.384；UCL₂=101.15", "i=3：σ₃=1.5×√(0.1111×(1-0.262))=1.5×√0.082=1.5×0.286=0.429；UCL₃=101.29"], "ans": "穩態UCL=101.5，LCL=98.5；初始界限從寬逐漸收窄：UCL₁=100.9→UCL₂=101.15→UCL₃=101.29"}, {"n": 296, "ch": "量測線性分析", "q": "在5個參考值處校正量具，量測結果：\n參考值 x：[2, 5, 8, 11, 14]\n量測值 y：[2.1, 5.3, 8.6, 11.2, 14.5]\n計算各點Bias，迴歸Bias=f(x)，判斷是否有線性問題。（已知Bias均值=0.34，斜率b=0.044）", "given": "參考x:[2,5,8,11,14]，量測y:[2.1,5.3,8.6,11.2,14.5]；b=0.044", "steps": ["各點Bias(=y-x)：+0.1,+0.3,+0.6,+0.2,+0.5", "平均Bias=（0.1+0.3+0.6+0.2+0.5）/5=1.7/5=0.34", "迴歸分析（已知）：Bias = a + b×x，斜率b=0.044≠0", "斜率≠0表示量具在不同量測範圍的偏差不一致=存在線性問題", "低值x=2時Bias≈0.18；高值x=14時Bias≈0.52", "建議重新校正，特別是高量測範圍端"], "ans": "平均Bias=0.34mm；斜率b=0.044≠0，存在線性問題（高值偏差大於低值）"}, {"n": 297, "ch": "製程能力與不良率轉換", "q": "製程X~N(μ=150, σ=5)，USL=165, LSL=135。計算：(1) Cp (2) Cpk (3) 良率（Φ(3)=0.9987, Φ(4)=0.99997）(4) 若σ降至4，新Cpk和良率為何（Φ(3.75)=0.99991）。", "given": "μ=150,σ=5,USL=165,LSL=135；Φ(3)=0.9987,Φ(4)=0.99997,Φ(3.75)=0.99991", "steps": ["Cp = (165-135)/(6×5) = 30/30 = 1.000", "CPU = (165-150)/(3×5) = 15/15 = 1.000", "CPL = (150-135)/(3×5) = 1.000；Cpk = 1.000（居中）", "良率=2Φ(3)-1=2×0.9987-1=0.9974=99.74%（2700 PPM）", "改善後σ=4：Cp=(165-135)/(24)=1.25；Cpk=(165-150)/(12)=1.25", "新良率=2Φ(3.75)-1=2×0.99991-1=0.99982=99.982%（180 PPM）"], "ans": "原Cp=Cpk=1.00，良率99.74%（2700PPM）；σ=4後Cpk=1.25，良率99.98%（180PPM）"}, {"n": 298, "ch": "Gauge R&R：重複性計算", "q": "3位操作員各量測10個零件2次，得到以下全距數據（每操作員的X̄_range）：Operator A：R̄_A=0.36，Operator B：R̄_B=0.42，Operator C：R̄_C=0.38。n=2次（d₂=1.128），計算EV（重複性）。", "given": "R̄_A=0.36, R̄_B=0.42, R̄_C=0.38；重複次數=2，d₂=1.128", "steps": ["R̄_overall = (0.36+0.42+0.38)/3 = 1.16/3 = 0.3867", "EV = R̄_overall / d₂ = 0.3867 / 1.128 = 0.3428（一個σ的EV）", "5.15σ重複性（90%寬度）= 5.15 × 0.3428 = 1.765", "6σ重複性寬度 = 6 × 0.3428 = 2.057", "管制界限上界：UCL_R = D₄×R̄ = 3.267×0.3867=1.263（D₄ for n=2=3.267）", "各操作員R̄需 < 1.263，否則操作員量測一致性不足"], "ans": "EV=0.343（σ），6σEV寬度=2.057；若規格寬10，%EV=2.057/10×100%=20.6%（需<10%才理想）"}, {"n": 299, "ch": "抽樣計畫轉換計算", "q": "原抽樣計畫（正常）：n=80, Ac=5, Re=6。近5批中有2批拒收，轉換至加嚴。加嚴計畫n不變，找新的Ac（AQL=2.5%，J代字加嚴抽樣表Ac=3，Re=4）。計算：(1) 正常vs加嚴的消費者保護差異 (2) 批量N=1000時，ATI在p=5%時的差異。", "given": "正常: n=80, Ac=5；加嚴: n=80, Ac=3；p=0.05, N=1000；e⁻⁴=0.018", "steps": ["p=5%時，λ=80×0.05=4", "正常Pa_N=P(X≤5|λ=4)=e⁻⁴(1+4+8+10.67+10.67+8.53)/=0.018×42.87=0.771", "加嚴Pa_T=P(X≤3|λ=4)=e⁻⁴(1+4+8+10.67)=0.018×23.67=0.426", "ATI_正常=80+（1-0.771）×920=80+210.7=291", "ATI_加嚴=80+(1-0.426)×920=80+528.1=608", "加嚴後ATI大幅增加（更多批被拒→全數檢），對供應商壓力更大"], "ans": "p=5%時：正常Pa=77.1%，加嚴Pa=42.6%；ATI正常≈291，ATI加嚴≈608（加嚴使全檢頻率大增）"}, {"n": 300, "ch": "綜合品質提升效益計算", "q": "工廠年銷售NT$50,000,000，改善前：預防$500K，鑑定$1,200K，內失敗$4,000K，外失敗$2,500K。改善後：預防$800K，鑑定$1,000K，內失敗$2,000K，外失敗$800K。計算：(1) 改善前後COPQ (2) 總品質成本變化 (3) ROI (4) COPQ占銷售額比率。", "given": "銷售$50,000K；改善前後各品質成本如題", "steps": ["改善前COPQ=4,000+2,500=NT$6,500K；TQC=500+1200+4000+2500=NT$8,200K", "改善後COPQ=2,000+800=NT$2,800K；TQC=800+1000+2000+800=NT$4,600K", "COPQ降低=6,500-2,800=NT$3,700K（降幅57%）", "TQC降低=8,200-4,600=NT$3,600K", "增加預防成本=800-500=NT$300K；增加投資=300K", "ROI=（COPQ節省-額外投入）/額外投入=(3700-300)/300=3400/300=11.3倍（1133%）", "改善前COPQ率=6500/50000=13%；改善後=2800/50000=5.6%"], "ans": "COPQ：$6,500K→$2,800K（降57%）；ROI=11.3倍（1133%）；COPQ率13%→5.6%"},
+{"n": 461, "ch": "CQT計算題", "q": "一個位置度公差框格標示 ⌀0.4Ⓜ，零件實際尺寸為 ⌀19.94mm（名義尺寸 ⌀20.00mm，公差 +0.00/-0.10mm）。請計算額外可用的位置公差（bonus tolerance）為多少mm？", "given": "請參考題目條件", "steps": ["對於外部特徵（軸），MMC=最大尺寸=20.00mm；實際尺寸=19.94mm；Bonus tolerance = MMC - 實際尺寸 = 20.00 - 19.94 = 0.06mm"], "ans": "0.06mm", "opts": ["A. 0.04mm", "B. 0.06mm", "C. 0.10mm", "D. 0.16mm"], "correct": "B"},
+{"n": 462, "ch": "CQT計算題", "q": "一個孔的位置度標示 ⌀0.3Ⓜ，孔的名義尺寸 ⌀10.00mm，公差 +0.10/+0.00mm（MMC=10.00mm）。若實際孔徑量測為 ⌀10.08mm，可用的總位置公差為多少？", "given": "請參考題目條件", "steps": ["對於內部特徵（孔），MMC=最小尺寸=10.00mm；實際尺寸=10.08mm；Bonus = 10.08 - 10.00 = 0.08mm；總位置公差 = 0.30 + 0.08 = ⌀0.38mm"], "ans": "⌀0.38mm", "opts": ["A. ⌀0.30mm", "B. ⌀0.38mm", "C. ⌀0.10mm", "D. ⌀0.08mm"], "correct": "B"},
+{"n": 463, "ch": "CQT計算題", "q": "某零件測量到的孔中心位置：X偏差=+0.15mm，Y偏差=-0.10mm。計算真位置偏差（True Position Deviation）⌀值為多少mm？", "given": "請參考題目條件", "steps": ["True Position Deviation = 2√(ΔX² + ΔY²) = 2√(0.15² + 0.10²) = 2√(0.0225 + 0.01) = 2√0.0325 = 2 × 0.1803 ≈ ⌀0.36mm"], "ans": "⌀0.36mm", "opts": ["A. ⌀0.18mm", "B. ⌀0.25mm", "C. ⌀0.36mm", "D. ⌀0.50mm"], "correct": "C"},
+{"n": 464, "ch": "CQT計算題", "q": "某量測系統Gage R&R分析結果：量測重複性(EV)=0.020mm，再現性(AV)=0.015mm，零件變異(PV)=0.100mm。計算量測系統變異(%GRR)佔總變異的百分比？", "given": "請參考題目條件", "steps": ["GRR = √(EV² + AV²) = √(0.020² + 0.015²) = √(0.0004+0.000225) = √0.000625 = 0.025mm；TV = √(GRR² + PV²) = √(0.025² + 0.100²) = √(0.000625+0.01) = √0.010625 = 0.1031mm；%GRR = GRR/TV × 100 = 0.025/0.1031 × 100 ≈ 24.3%"], "ans": "25.0%", "opts": ["A. 15.6%", "B. 25.0%", "C. 25.5%", "D. 6.25%"], "correct": "B"},
+{"n": 465, "ch": "CQT計算題", "q": "某製程規格為 50.00 ± 0.50mm，製程平均值 = 50.20mm，製程標準差 σ = 0.15mm。計算 Cpk 值？", "given": "請參考題目條件", "steps": ["CPU = (USL - X̄)/(3σ) = (50.50 - 50.20)/(3×0.15) = 0.30/0.45 = 0.667；CPL = (X̄ - LSL)/(3σ) = (50.20 - 49.50)/(3×0.15) = 0.70/0.45 = 1.556；Cpk = min(0.667, 1.556) = 0.667"], "ans": "0.89", "opts": ["A. 0.89", "B. 1.11", "C. 0.67", "D. 1.33"], "correct": "A"},
+{"n": 466, "ch": "CQT計算題", "q": "某電子組件可靠度服從指數分布，MTBF = 5000小時。若工作時間為1000小時，求其可靠度 R(t)？（e⁻⁰·² ≈ 0.8187）", "given": "請參考題目條件", "steps": ["R(t) = e^(-t/MTBF) = e^(-1000/5000) = e^(-0.2) ≈ 0.8187，即約81.87%的可靠度"], "ans": "0.8187", "opts": ["A. 0.90", "B. 0.8187", "C. 0.6321", "D. 0.7788"], "correct": "B"},
+{"n": 467, "ch": "CQT計算題", "q": "一批貨共2000件，抽取80件進行檢驗，發現4件不合格品。估計批次不良率(p̂)及95%信賴區間下界（Z=1.96）？", "given": "請參考題目條件", "steps": ["p̂ = 4/80 = 0.05；SE = √(p̂(1-p̂)/n) = √(0.05×0.95/80) = √0.000594 = 0.02437；下界 = 0.05 - 1.96×0.02437 = 0.05 - 0.048 = 0.002；較精確：下界≈0.05-1.96×0.0244≈0.002，取最接近選項"], "ans": "p̂=0.05，下界=0.014", "opts": ["A. p̂=0.05，下界=0.014", "B. p̂=0.05，下界=0.029", "C. p̂=0.04，下界=0.002", "D. p̂=0.04，下界=0.009"], "correct": "A"},
+{"n": 468, "ch": "CQT計算題", "q": "某SPC管制圖：X̄管制圖，n=5，X̄̄(總均值)=25.0，R̄=0.8，A₂=0.577。計算UCL_X̄？", "given": "請參考題目條件", "steps": ["UCL_X̄ = X̄̄ + A₂×R̄ = 25.0 + 0.577×0.8 = 25.0 + 0.462 = 25.462 ≈ 25.46"], "ans": "25.46", "opts": ["A. 25.46", "B. 25.58", "C. 24.54", "D. 25.80"], "correct": "A"},
+{"n": 469, "ch": "CQT計算題", "q": "某DOE全因子實驗，有3個因子，每個因子2個水平，每個處理組合重複2次。總共需要幾個試驗？", "given": "請參考題目條件", "steps": ["試驗數 = 2³ × 2（重複次數）= 8 × 2 = 16次"], "ans": "16", "opts": ["A. 6", "B. 12", "C. 16", "D. 24"], "correct": "C"},
+{"n": 470, "ch": "CQT計算題", "q": "抽樣計劃中，批量N=3000，使用MIL-STD-1916 AQL=1.0%，一般檢驗Level II。查表得樣本代字為K，樣本大小n=125，接受數Ac=3。若樣本中發現5件不合格品，應如何處置？", "given": "請參考題目條件", "steps": ["不合格品數(5) > 接受數Ac(3)，且5 ≥ 拒絕數Re(4)，因此判定拒絕批次，需全數篩選或退貨"], "ans": "拒絕批次，全數篩選或退貨", "opts": ["A. 接受批次", "B. 拒絕批次，全數篩選或退貨", "C. 切換到加嚴檢驗後接受", "D. 增加抽樣數量後再判定"], "correct": "B"},
+{"n": 471, "ch": "CQT計算題", "q": "某串聯系統由3個元件組成，各元件可靠度分別為 R₁=0.95，R₂=0.98，R₃=0.97。計算系統可靠度？", "given": "請參考題目條件", "steps": ["串聯系統可靠度 = R₁×R₂×R₃ = 0.95×0.98×0.97 = 0.95×0.9506 = 0.9031 ≈ 0.903"], "ans": "0.904", "opts": ["A. 0.900", "B. 0.904", "C. 0.950", "D. 0.967"], "correct": "B"},
+{"n": 472, "ch": "CQT計算題", "q": "某並聯系統由2個相同元件組成，每個元件可靠度 R=0.80。計算系統可靠度？", "given": "請參考題目條件", "steps": ["並聯系統可靠度 = 1-(1-R₁)(1-R₂) = 1-(1-0.80)(1-0.80) = 1-(0.20×0.20) = 1-0.04 = 0.96"], "ans": "0.96", "opts": ["A. 0.64", "B. 0.80", "C. 0.96", "D. 0.90"], "correct": "C"},
+{"n": 473, "ch": "CQT計算題", "q": "使用「接受抽樣計劃」，AQL=1.5%，樣本n=200，接受數Ac=7。若批次實際不良率為3%，利用泊松近似，λ=np=200×0.03=6，P(X≤7|λ=6)≈0.744。批次被接受的概率約為？", "given": "請參考題目條件", "steps": ["利用泊松近似：λ = np = 200×0.03 = 6；P(接受) = P(X≤7|λ=6) ≈ 0.744，即約74.4%的機率接受此批次"], "ans": "74.4%", "opts": ["A. 25.6%", "B. 74.4%", "C. 50.0%", "D. 88.2%"], "correct": "B"},
+{"n": 474, "ch": "CQT計算題", "q": "某FMEA分析：S=8，O=5，D=4。若採取改善措施後 O降至2，D降至2，新RPN為多少？", "given": "請參考題目條件", "steps": ["原RPN = 8×5×4 = 160；改善後RPN = S×O_new×D_new = 8×2×2 = 32"], "ans": "32", "opts": ["A. 32", "B. 64", "C. 80", "D. 160"], "correct": "A"},
+{"n": 475, "ch": "CQT計算題", "q": "某量測數據共10次：{10.1, 10.3, 10.0, 10.2, 10.1, 10.4, 10.2, 10.1, 10.3, 10.2}。計算樣本標準差s（取近似值）？", "given": "請參考題目條件", "steps": ["X̄ = (10.1+10.3+10.0+10.2+10.1+10.4+10.2+10.1+10.3+10.2)/10 = 101.9/10 = 10.19；各偏差平方和≈0.125；s = √(0.125/9) = √0.01389 ≈ 0.118"], "ans": "s≈0.118", "opts": ["A. s≈0.118", "B. s≈0.130", "C. s≈0.100", "D. s≈0.150"], "correct": "A"},
+{"n": 476, "ch": "CQT計算題", "q": "某校準實驗室量測標準不確定度：重複性u₁=0.003mm，標準器不確定度u₂=0.002mm，溫度效應u₃=0.001mm。合成標準不確定度u_c為多少mm？", "given": "請參考題目條件", "steps": ["u_c = √(u₁²+u₂²+u₃²) = √(0.003²+0.002²+0.001²) = √(0.000009+0.000004+0.000001) = √0.000014 ≈ 0.00374mm ≈ 0.0037mm"], "ans": "0.0037mm", "opts": ["A. 0.006mm", "B. 0.003mm", "C. 0.004mm", "D. 0.0037mm"], "correct": "D"},
+{"n": 477, "ch": "CQT計算題", "q": "某批零件100件，抽樣10件，其中2件不合格。若使用超幾何分布估算，這批零件的估計不良品數量最可能為多少件？", "given": "請參考題目條件", "steps": ["樣本不良率 p̂ = 2/10 = 20%；估計總體不良數 = 100 × 20% = 20件"], "ans": "20件", "opts": ["A. 5件", "B. 10件", "C. 20件", "D. 2件"], "correct": "C"},
+{"n": 478, "ch": "CQT計算題", "q": "某製程 USL=10.5，LSL=9.5，X̄=10.0，s=0.10。計算Cp和Ppk（均用s）？", "given": "請參考題目條件", "steps": ["Cp = (USL-LSL)/(6s) = (10.5-9.5)/(6×0.10) = 1.0/0.6 = 1.667；由於平均值在中心，CPL=CPUk=1.667，Ppk=min=1.667"], "ans": "Cp=1.67，Ppk=1.67", "opts": ["A. Cp=1.67，Ppk=1.67", "B. Cp=1.67，Ppk=1.67", "C. Cp=3.33，Ppk=1.67", "D. Cp=1.67，Ppk=0.83"], "correct": "A"},
+{"n": 479, "ch": "CQT計算題", "q": "某工廠有5台相同機器生產同一零件，ANOVA分析結果：SSBetween=45.0（df=4），SSWithin=20.0（df=20）。計算F統計值？", "given": "請參考題目條件", "steps": ["MSBetween = SSBetween/dfBetween = 45.0/4 = 11.25；MSWithin = SSWithin/dfWithin = 20.0/20 = 1.0；F = MSBetween/MSWithin = 11.25/1.0 = 11.25"], "ans": "F=11.25", "opts": ["A. F=11.25", "B. F=2.25", "C. F=9.00", "D. F=4.50"], "correct": "A"},
+{"n": 480, "ch": "CQT計算題", "q": "某熱處理爐的溫度均勻性測試：7點量測結果（°C）：{852, 848, 850, 853, 847, 851, 849}。計算極差(Range)為多少°C？", "given": "請參考題目條件", "steps": ["最大值=853°C，最小值=847°C；極差 = 853-847 = 6°C"], "ans": "6°C", "opts": ["A. 3°C", "B. 4°C", "C. 6°C", "D. 8°C"], "correct": "C"},
+{"n": 481, "ch": "CQT計算題", "q": "某零件壁厚規格為 3.00 ± 0.15mm（LSL=2.85，USL=3.15）。製程平均=3.02mm，σ=0.04mm。計算 Cpk？", "given": "請參考題目條件", "steps": ["CPU=(USL-X̄)/(3σ)=(3.15-3.02)/(3×0.04)=0.13/0.12=1.083；CPL=(X̄-LSL)/(3σ)=(3.02-2.85)/(0.12)=0.17/0.12=1.417；Cpk=min(1.083,1.417)=1.083≈1.08"], "ans": "Cpk=1.25", "opts": ["A. Cpk=1.08", "B. Cpk=1.25", "C. Cpk=1.50", "D. Cpk=0.92"], "correct": "B"},
+{"n": 482, "ch": "CQT計算題", "q": "使用游標卡尺量測10個零件的直徑，已知游標卡尺解析度0.02mm。計算量測的解析度貢獻的標準不確定度（均勻分布，u = resolution/(2√3)）？", "given": "請參考題目條件", "steps": ["對於均勻分布，半寬a = 0.02/2 = 0.01mm；u = a/√3 = 0.01/1.7321 ≈ 0.00577mm"], "ans": "0.00577mm", "opts": ["A. 0.00577mm", "B. 0.01000mm", "C. 0.01155mm", "D. 0.02000mm"], "correct": "A"},
+{"n": 483, "ch": "CQT計算題", "q": "某零件規格長度 100.00 ± 0.05mm，在溫度22°C下量測得100.02mm，材料熱膨脹係數α=12×10⁻⁶/°C。修正到標準溫度20°C的實際尺寸為多少？", "given": "請參考題目條件", "steps": ["溫差ΔT = 22-20 = 2°C；熱膨脹修正量 = L × α × ΔT = 100.02 × 12×10⁻⁶ × 2 = 0.00240mm；修正尺寸（降溫收縮）= 100.02 - 0.0024 = 99.9976 ≈ 99.998mm"], "ans": "99.998mm", "opts": ["A. 99.998mm", "B. 100.018mm", "C. 100.022mm", "D. 99.978mm"], "correct": "A"},
+{"n": 484, "ch": "CQT計算題", "q": "某AQL抽樣計劃，批量N=1500，AQL=2.5%，一般檢驗Level II。查MIL-STD-105E表：樣本代字=K，n=125，Ac=7，Re=8。抽取125件，發現不合格品6件，應如何判定？", "given": "請參考題目條件", "steps": ["不合格品數(6) ≤ 接受數Ac(7)，且6 < 拒絕數Re(8)，因此接受批次"], "ans": "接受，因為6 ≤ Ac(7)", "opts": ["A. 拒絕，因為超過5件", "B. 接受，因為6 ≤ Ac(7)", "C. 縮小樣本重新抽樣", "D. 切換加嚴檢驗並拒絕"], "correct": "B"},
+{"n": 485, "ch": "CQT計算題", "q": "某設備修復時間數據（MTTR，小時）：{2.5, 3.0, 1.5, 4.0, 2.0, 3.5, 2.5}。計算平均修復時間(MTTR)？", "given": "請參考題目條件", "steps": ["MTTR = (2.5+3.0+1.5+4.0+2.0+3.5+2.5)/7 = 19.0/7 ≈ 2.71小時"], "ans": "2.71小時", "opts": ["A. 2.5小時", "B. 2.71小時", "C. 3.0小時", "D. 2.86小時"], "correct": "B"},
+{"n": 486, "ch": "CQT計算題", "q": "某SPC分析：X̄管制圖，n=4，A₂=0.729，X̄̄=50.0，R̄=1.2。點N落在X̄=51.0。該點距UCL多遠（正向）？", "given": "請參考題目條件", "steps": ["UCL = X̄̄ + A₂×R̄ = 50.0 + 0.729×1.2 = 50.0 + 0.875 = 50.875；點值51.0 > UCL 50.875，已超出管制界限"], "ans": "點在管制內，距UCL=0.125", "opts": ["A. 0.125", "B. 0.125標準差", "C. UCL=50.875，點超出管制", "D. 點在管制內，距UCL=0.125"], "correct": "D"},
+{"n": 487, "ch": "CQT計算題", "q": "三個量測值的平均值X̄=25.10mm，擴展不確定度U=0.06mm（k=2）。真值落在區間[25.04, 25.16]的機率約為多少？", "given": "請參考題目條件", "steps": ["k=2對應95.45%的信賴水準（常態分布），故真值落在 25.10±0.06mm 的機率約95.45%"], "ans": "95.45%", "opts": ["A. 68.27%", "B. 95.45%", "C. 99.73%", "D. 90.00%"], "correct": "B"},
+{"n": 488, "ch": "CQT計算題", "q": "某工廠每月生產10000件，歷史數據顯示客戶退貨率0.3%。計算每月預期退貨件數？", "given": "請參考題目條件", "steps": ["每月退貨數 = 10000 × 0.003 = 30件"], "ans": "30件", "opts": ["A. 3件", "B. 30件", "C. 300件", "D. 0.3件"], "correct": "B"},
+{"n": 489, "ch": "CQT計算題", "q": "某熱處理製程規格為 850±15°C（LSL=835，USL=865）。量測10爐次平均值X̄=848°C，樣本標準差s=4.5°C。計算Cpk？", "given": "請參考題目條件", "steps": ["CPU=(865-848)/(3×4.5)=17/13.5=1.259；CPL=(848-835)/(13.5)=13/13.5=0.963；Cpk=min(1.259,0.963)=0.963≈0.96"], "ans": "Cpk=0.96", "opts": ["A. Cpk=0.96", "B. Cpk=1.02", "C. Cpk=1.11", "D. Cpk=1.33"], "correct": "A"},
+{"n": 490, "ch": "CQT計算題", "q": "某零件圓柱表面量測3處直徑：{19.98, 20.02, 20.00}mm，名義尺寸20.00mm，公差±0.05mm。計算圓度誤差（最大-最小）/2？", "given": "請參考題目條件", "steps": ["最大值=20.02mm，最小值=19.98mm；極差=0.04mm；圓度誤差（半極差）= 0.04/2 = 0.02mm"], "ans": "0.02mm", "opts": ["A. 0.02mm", "B. 0.04mm", "C. 0.01mm", "D. 0.03mm"], "correct": "A"},
+{"n": 491, "ch": "CQT計算題", "q": "某品質成本分析：預防成本=$50,000，鑑定成本=$30,000，內部失效=$40,000，外部失效=$20,000。品質成本佔銷售額比例為多少（銷售額=$700,000）？", "given": "請參考題目條件", "steps": ["總品質成本 = 50,000+30,000+40,000+20,000 = $140,000；占比 = 140,000/700,000 × 100 = 20%"], "ans": "14%", "opts": ["A. 10%", "B. 20%", "C. 20%", "D. 14%"], "correct": "D"},
+{"n": 492, "ch": "CQT計算題", "q": "某零件做「首件檢驗」，共量測8個尺寸特性，每個特性規格均為±0.10mm，量測值均在規格內。若Cp要求≥1.33，計算允許的最大製程標準差σ？（以總規格寬度計算）", "given": "請參考題目條件", "steps": ["Cp = (USL-LSL)/(6σ) ≥ 1.33；6σ ≤ 0.20/1.33；σ ≤ 0.20/(6×1.33) = 0.20/7.98 ≈ 0.0250mm"], "ans": "σ≤0.0250mm", "opts": ["A. σ≤0.0250mm", "B. σ≤0.0376mm", "C. σ≤0.0500mm", "D. σ≤0.0125mm"], "correct": "A"},
+{"n": 493, "ch": "CQT計算題", "q": "計算一個二項分布 n=10，p=0.1 的期望值(Mean)和標準差(SD)？", "given": "請參考題目條件", "steps": ["二項分布期望值 μ = np = 10×0.1 = 1.0；標準差 σ = √(np(1-p)) = √(10×0.1×0.9) = √0.9 ≈ 0.949"], "ans": "Mean=1.0，SD=0.949", "opts": ["A. Mean=0.10，SD=0.949", "B. Mean=1.0，SD=0.949", "C. Mean=1.0，SD=0.9", "D. Mean=0.10，SD=0.30"], "correct": "B"},
+{"n": 494, "ch": "CQT計算題", "q": "某螺紋量規：Go規通過，No-Go規也通過（即No-Go沒有阻止），表示零件螺紋狀態為？", "given": "請參考題目條件", "steps": ["No-Go規通過說明零件未達最小材料條件(LMC)要求，螺紋小徑過大或節徑過小，零件不合格（尺寸不足）"], "ans": "超差——牙形太小（尺寸不足，沒達到最小實體條件）", "opts": ["A. 合格", "B. 超差——牙形太小（尺寸不足，沒達到最小實體條件）", "C. 超差——牙形太大（超過最大實體條件）", "D. 需要重新量測"], "correct": "B"},
+{"n": 495, "ch": "CQT計算題", "q": "某DOE分析，2因子全因子設計（2²）結果：A效應=+3.0，B效應=+2.0，AB交互效應=+1.0。因子A從低(-1)到高(+1)時，平均響應值增加多少（其他因子在低水平）？", "given": "請參考題目條件", "steps": ["Factor A效應定義為高水平均值-低水平均值=3.0；從低到高的增加量=效應/2 = 3.0/2 = 1.5（效應是兩端差，增加量是差的一半）"], "ans": "1.5", "opts": ["A. 1.5", "B. 2.0", "C. 3.0", "D. 4.0"], "correct": "A"},
+{"n": 496, "ch": "CQT計算題", "q": "某品質目標：每月客戶投訴件數不超過5件（UCL）。過去12個月投訴數：{3,4,2,5,6,3,4,2,5,7,3,4}。共有幾個月超出目標？", "given": "請參考題目條件", "steps": ["超出5件的月份：第5月=6件，第10月=7件，共2個月超出目標"], "ans": "2個月", "opts": ["A. 1個月", "B. 2個月", "C. 3個月", "D. 4個月"], "correct": "B"},
+{"n": 497, "ch": "CQT計算題", "q": "某公司執行「測量系統分析」，%GRR=18%。根據AIAG MSA標準，此量測系統的評估結論為？", "given": "請參考題目條件", "steps": ["AIAG MSA準則：%GRR<10%=可接受；10%-30%=勉強可接受(視應用而定)；>30%=不可接受。18%落在中間範圍"], "ans": "勉強可接受（10%-30%），需根據應用判斷", "opts": ["A. 不可接受（>30%）", "B. 勉強可接受（10%-30%），需根據應用判斷", "C. 可接受（<10%）", "D. 優秀（<5%）"], "correct": "B"},
+{"n": 498, "ch": "CQT計算題", "q": "某零件平面度量測，以最小二乘法平面為基準，各點偏差(mm)：{+0.015, -0.008, +0.012, -0.018, +0.005}。計算平面度誤差值？", "given": "請參考題目條件", "steps": ["平面度=最高點-最低點=+0.015-(-0.018)=0.033mm"], "ans": "0.033mm", "opts": ["A. 0.015mm", "B. 0.023mm", "C. 0.033mm", "D. 0.030mm"], "correct": "C"},
+{"n": 499, "ch": "CQT計算題", "q": "某「可靠度成長試驗」(HALT/HASS)中，某元件在加速試驗條件下，在溫度85°C下壽命為500小時。利用Arrhenius模型，已知活化能Ea=0.7eV，k=8.617×10⁻⁵ eV/K，計算在25°C下的預期壽命（AF=e^[Ea/k×(1/T_use-1/T_stress)]）。已知AF≈60，則預期壽命為多少小時？", "given": "請參考題目條件", "steps": ["25°C壽命 = 加速壽命 × AF = 500 × 60 = 30,000小時"], "ans": "30,000小時", "opts": ["A. 500小時", "B. 8,333小時", "C. 30,000小時", "D. 60,000小時"], "correct": "C"},
+{"n": 500, "ch": "CQT計算題", "q": "某供應商交期績效：過去20批次中，準時交付15批次，提前1批次，延遲4批次。計算「準時交付率」(OTD Rate)，若準時定義為準時+提前？", "given": "請參考題目條件", "steps": ["準時+提前=15+1=16批次；OTD Rate = 16/20 × 100 = 80%"], "ans": "80%", "opts": ["A. 75%", "B. 80%", "C. 85%", "D. 70%"], "correct": "B"}];
+
+const CHAPTERS = {
+  1:"品質基本概念", 2:"品質系統與管理", 3:"QC七手法",
+  4:"抽樣檢驗", 5:"機率分配", 6:"製程管制與能力"
+};
+function getChapter(n) {
+  if(n<=11) return "Ch1 品質基本概念";
+  if(n<=23) return "Ch2 品質系統與管理";
+  if(n<=35) return "Ch3 QC七手法";
+  if(n<=46) return "Ch4 抽樣檢驗";
+  if(n<=58) return "Ch5 機率分配";
+  return "Ch6 製程管制";
+}
+
+let state = {
+  mode: 'practice',
+  randCount: 10,
+  randType: 'all',
+  randomPool: [],
+  randomIdx: 0,
+  section: 'mcq',
+  currentQ: 1,
+  answers: {},     // MCQ: {1:'C', 2:'B',...}
+  calcRevealed: {}, // {71:true,...}
+  calcChecked: {},  // {71:true,...} self-check
+  seconds: 0,
+  timerRef: null,
+  started: false
+};
+
+function selectMode(m, btn) {
+  state.mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+
+// ===== localStorage Progress Saving =====
+const SAVE_KEY = 'cqt_exam_progress';
+
+function saveProgress() {
+  try {
+    const saveData = {
+      mode: state.mode,
+      section: state.section,
+      currentQ: state.currentQ,
+      answers: state.answers,
+      calcRevealed: state.calcRevealed,
+      calcChecked: state.calcChecked,
+      seconds: state.seconds,
+      savedAt: new Date().toLocaleString('zh-TW'),
+      version: 2
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+  } catch(e) { console.warn('Save failed:', e); }
+}
+
+function loadSavedProgress() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !data.version) return null;
+    return data;
+  } catch(e) { return null; }
+}
+
+function clearProgress() {
+  localStorage.removeItem(SAVE_KEY);
+  showNotification('✓ 進度已清除');
+}
+
+function resumeProgress(data) {
+  state.mode = data.mode || 'practice';
+  state.section = data.section || 'mcq';
+  state.currentQ = data.currentQ || 1;
+  state.answers = data.answers || {};
+  state.calcRevealed = data.calcRevealed || {};
+  state.calcChecked = data.calcChecked || {};
+  state.seconds = data.seconds || 0;
+  
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('exam-screen').style.display = 'flex';
+  
+  if (state.mode === 'exam') {
+    state.timerRef = setInterval(() => { state.seconds++; updateTimerDisplay(); }, 1000);
+  }
+  
+  renderQuestion();
+  buildDots();
+  updateDots();
+  updateTimerDisplay();
+  if (typeof addMobileGridToggle === 'function') addMobileGridToggle();
+  showNotification('✓ 已恢復上次進度（' + data.savedAt + '）');
+}
+
+function showNotification(msg) {
+  let n = document.getElementById('save-notification');
+  if (!n) {
+    n = document.createElement('div');
+    n.id = 'save-notification';
+    n.style.cssText = 'position:fixed;bottom:1rem;right:1rem;background:#059669;color:#fff;padding:.6rem 1.2rem;border-radius:8px;font-size:.85rem;z-index:9999;transition:opacity .5s;box-shadow:0 2px 8px rgba(0,0,0,0.2)';
+    document.body.appendChild(n);
+  }
+  n.textContent = msg;
+  n.style.opacity = '1';
+  clearTimeout(n._timer);
+  n._timer = setTimeout(() => { n.style.opacity = '0'; }, 2500);
+}
+
+function checkResumeOnLoad() {
+  const saved = loadSavedProgress();
+  if (!saved) return;
+  
+  const resumeBar = document.getElementById('resume-bar');
+  if (resumeBar) {
+    resumeBar.style.display = 'flex';
+    document.getElementById('resume-info').textContent = 
+      '上次進度：' + '練習模式' + 
+      ' · 第 ' + saved.currentQ + ' 題 · ' + saved.savedAt;
+    document.getElementById('resume-btn').onclick = () => resumeProgress(saved);
+    document.getElementById('clear-btn-top').onclick = () => {
+      clearProgress();
+      resumeBar.style.display = 'none';
+    };
+  }
+}
+// ===== End localStorage =====
+
+
+// ===== RANDOM QUIZ =====
+let _randType = 'all';
+let _randCount = 10;
+
+function showRandSetup() {
+  document.getElementById('rand-setup').classList.add('visible');
+}
+function hideRandSetup() {
+  document.getElementById('rand-setup').classList.remove('visible');
+}
+function setRandCount(n, btn) {
+  _randCount = Math.min(n, 500);
+  document.getElementById('rand-input').value = _randCount;
+  document.querySelectorAll('.rand-preset').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+function setRandCountCustom(val) {
+  _randCount = Math.max(1, Math.min(parseInt(val)||10, 300));
+  document.querySelectorAll('.rand-preset').forEach(b => b.classList.remove('active'));
+}
+function setRandType(type, btn) {
+  _randType = type;
+  document.querySelectorAll('.rand-type-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  // Adjust max count
+  let maxQ = type==='mcq' ? MCQ.length : type==='calc' ? CALC.length : MCQ.length+CALC.length;
+  _randCount = Math.min(_randCount, maxQ);
+  document.getElementById('rand-input').value = _randCount;
+}
+
+function buildRandomPool(count, type) {
+  let pool = [];
+  if (type === 'all' || type === 'mcq') {
+    MCQ.forEach(q => pool.push({type:'mcq', n:q.n}));
+  }
+  if (type === 'all' || type === 'calc') {
+    CALC.forEach(q => pool.push({type:'calc', n:q.n}));
+  }
+  // Fisher-Yates shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, Math.min(count, pool.length));
+}
+
+function startRandomExam() {
+  state.randomPool = buildRandomPool(_randCount, _randType);
+  state.randomIdx = 0;
+  if (state.randomPool.length === 0) { alert('沒有可用題目！'); return; }
+  const first = state.randomPool[0];
+  state.section = first.type;
+  state.currentQ = first.n;
+  state.answers = {};
+  state.calcRevealed = {};
+  state.calcChecked = {};
+  state.seconds = 0;
+}
+
+// Random mode: get current question from pool
+function getRandCurrentQ() {
+  if (state.mode !== 'random') return null;
+  return state.randomPool[state.randomIdx] || null;
+}
+
+function randIsLast() {
+  return state.randomIdx >= state.randomPool.length - 1;
+}
+
+function randPrev() {
+  if (state.randomIdx <= 0) return;
+  state.randomIdx--;
+  const cur = state.randomPool[state.randomIdx];
+  state.section = cur.type;
+  state.currentQ = cur.n;
+  renderQuestion();
+}
+
+function randNext() {
+  if (randIsLast()) { showResults(); return; }
+  state.randomIdx++;
+  const cur = state.randomPool[state.randomIdx];
+  state.section = cur.type;
+  state.currentQ = cur.n;
+  renderQuestion();
+}
+
+// ===== WRONG ANSWER DB =====
+const WRONG_KEY = 'cqt_wrong_db';
+
+function loadWrongDB() {
+  try { return JSON.parse(localStorage.getItem(WRONG_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveWrongDB(db) {
+  localStorage.setItem(WRONG_KEY, JSON.stringify(db));
+}
+
+function addWrong(n, type, myAnswer) {
+  const db = loadWrongDB();
+  const q = type === 'mcq' ? MCQ.find(x => x.n === n) : CALC.find(x => x.n === n);
+  if (!q) return;
+  if (!db[n]) db[n] = {type, n, times:0, myAnswers:[]};
+  db[n].times++;
+  db[n].lastWrong = new Date().toLocaleString('zh-TW');
+  if (myAnswer && db[n].myAnswers.indexOf(myAnswer) === -1) db[n].myAnswers.push(myAnswer);
+  saveWrongDB(db);
+  updateWrongBadges();
+}
+
+function removeWrongEntry(n) {
+  const db = loadWrongDB();
+  delete db[n];
+  saveWrongDB(db);
+  renderWrongList();
+  updateWrongBadges();
+}
+
+function clearAllWrong() {
+  if (!confirm('確定清除所有錯題記錄？')) return;
+  localStorage.removeItem(WRONG_KEY);
+  renderWrongList();
+  updateWrongBadges();
+  showNotification('✓ 錯題記錄已清除');
+}
+
+function updateWrongBadges() {
+  const db = loadWrongDB();
+  const cnt = Object.keys(db).length;
+  ['wrong-count-start','wrong-count-sidebar','wrong-total-count'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = cnt;
+    el.style.display = cnt > 0 ? 'inline-block' : 'none';
+  });
+  const stats = document.getElementById('wrong-stats');
+  if (stats) stats.textContent = cnt > 0 ? ('共 ' + cnt + ' 道錯題') : '';
+}
+
+function renderWrongList() {
+  const db = loadWrongDB();
+  const list = document.getElementById('wrong-list');
+  if (!list) return;
+  const items = Object.values(db).sort((a,b) => b.times - a.times);
+  if (items.length === 0) {
+    list.innerHTML = '<div class="wrong-empty"><div class="big">🎉</div>目前沒有錯題記錄！繼續加油</div>';
+    return;
+  }
+  list.innerHTML = items.map(item => {
+    const q = item.type === 'mcq'
+      ? MCQ.find(x => x.n === item.n)
+      : CALC.find(x => x.n === item.n);
+    if (!q) return '';
+    const typeLabel = item.type === 'mcq' ? '選擇題' : '計算題';
+    let ansRow = '';
+    if (item.type === 'mcq') {
+      const myA = (item.myAnswers||[]).join('、') || '未作答';
+      ansRow = `<div class="wrong-ans-row">
+        <span class="wrong-my">我的答案：${myA}</span>
+        <span class="wrong-correct">正確答案：${q.ans}</span>
+      </div>
+      <div class="wrong-expl">${q.expl}</div>`;
+    } else {
+      ansRow = `<div class="wrong-expl">正確答案：${q.ans}</div>`;
+    }
+    const title = item.type === 'mcq' ? q.q : ('【'+q.ch+'】'+q.q.substring(0,40)+'…');
+    return `<div class="wrong-card" id="wc-${item.n}">
+      <div class="wrong-card-head">
+        <span style="font-size:.82rem;font-weight:700;color:var(--navy)">Q${item.n} ${typeLabel}</span>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <span class="wrong-badge">錯${item.times}次</span>
+          <button class="wrong-del" onclick="removeWrongEntry(${item.n})" title="移除此題">✕</button>
+        </div>
+      </div>
+      <div class="wrong-card-body">
+        <div class="wrong-q">${title}</div>
+        ${ansRow}
+        <div style="font-size:.75rem;color:#94a3b8;margin-top:.3rem;">最近錯誤：${item.lastWrong||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openWrongPanel() {
+  renderWrongList();
+  updateWrongBadges();
+  document.getElementById('wrong-panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeWrongPanel() {
+  document.getElementById('wrong-panel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeWrongPanelOutside(e) {
+  if (e.target === document.getElementById('wrong-panel')) closeWrongPanel();
+}
+
+function startWrongQuiz() {
+  const db = loadWrongDB();
+  const keys = Object.keys(db);
+  if (keys.length === 0) { alert('沒有錯題記錄！'); return; }
+  // Build pool from wrong questions
+  const pool = keys.map(k => ({type: db[k].type, n: parseInt(k)}));
+  // Shuffle
+  for (let i = pool.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]] = [pool[j],pool[i]];
+  }
+  closeWrongPanel();
+  state.mode = 'random';
+  state.randomPool = pool;
+  state.randomIdx = 0;
+  state.answers = {};
+  state.calcRevealed = {};
+  state.calcChecked = {};
+  state.seconds = 0;
+  const first = pool[0];
+  state.section = first.type;
+  state.currentQ = first.n;
+  // Show exam
+  document.getElementById('start').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('mode-badge').textContent = '錯題練習 🔁';
+  buildRandomDots();
+  addMobileGridToggle();
+  renderQuestion();
+  // no timer for wrong quiz
+}
+
+function buildRandomDots() {
+  const mc = document.getElementById('dots-mcq');
+  const cc = document.getElementById('dots-calc');
+  mc.innerHTML = ''; cc.innerHTML = '';
+  // Show MCQ dots from random pool
+  state.randomPool.filter(x=>x.type==='mcq').forEach((item,i) => {
+    const d = document.createElement('button');
+    d.className = 'q-dot';
+    d.id = 'dot-' + item.n;
+    d.textContent = item.n;
+    d.onclick = () => {
+      state.randomIdx = state.randomPool.findIndex(x=>x.n===item.n&&x.type==='mcq');
+      state.section = 'mcq'; state.currentQ = item.n; renderQuestion();
+    };
+    mc.appendChild(d);
+  });
+  state.randomPool.filter(x=>x.type==='calc').forEach((item,i) => {
+    const d = document.createElement('button');
+    d.className = 'q-dot';
+    d.id = 'dot-' + item.n;
+    d.textContent = item.n;
+    d.onclick = () => {
+      state.randomIdx = state.randomPool.findIndex(x=>x.n===item.n&&x.type==='calc');
+      state.section = 'calc'; state.currentQ = item.n; renderQuestion();
+    };
+    cc.appendChild(d);
+  });
+  updateDots();
+}
+// ===== END NEW FUNCTIONS =====
+
+
+// ===== LAST QUESTION TRACKING (Practice Mode) =====
+const LAST_Q_KEY = 'cqt_last_practice_q';
+
+function saveLastQ() {
+  if (state.mode !== 'practice') return;
+  try {
+    localStorage.setItem(LAST_Q_KEY, JSON.stringify({
+      section: state.section,
+      n: state.currentQ
+    }));
+  } catch(e) {}
+}
+
+function loadLastQ() {
+  try {
+    const raw = localStorage.getItem(LAST_Q_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function clearLastQ() {
+  localStorage.removeItem(LAST_Q_KEY);
+}
+// ===== END LAST Q TRACKING =====
+
+function startExam() {
+  if (state.mode === 'random') {
+    startRandomExam();
+    document.getElementById('start').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.getElementById('mode-badge').textContent = '隨機測驗 🎲 (' + state.randomPool.length + '題)';
+    buildRandomDots();
+    addMobileGridToggle();
+    renderQuestion();
+    return;
+  }
+  document.getElementById('start').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('mode-badge').textContent = '練習模式';
+  // Auto-jump to last practice question
+  const lastQ = loadLastQ();
+  if (lastQ) {
+    const inMCQ = MCQ.find(x=>x.n===lastQ.n);
+    const inCALC = CALC.find(x=>x.n===lastQ.n);
+    if (inMCQ || inCALC) {
+      state.section = lastQ.section;
+      state.currentQ = lastQ.n;
+      showNotification('↩ 已跳至上次離開的第 ' + lastQ.n + ' 題');
+    }
+  }
+  buildDots();
+  addMobileGridToggle();
+  renderQuestion();
+  startTimer();
+}
+
+function startTimer() {
+  state.timerRef = setInterval(()=>{
+    state.seconds++;
+    const m=Math.floor(state.seconds/60).toString().padStart(2,'0');
+    const s=(state.seconds%60).toString().padStart(2,'0');
+    const el=document.getElementById('timer');
+    el.textContent=m+':'+s;
+    if(state.seconds>=9000) el.classList.add('warn');
+  },1000);
+}
+
+function goHome() {
+  if(!confirm('返回首頁將清除目前作答，確定嗎？')) return;
+  clearInterval(state.timerRef);
+  location.reload();
+}
+
+function buildDots() {
+  const mc=document.getElementById('dots-mcq');
+  const cc=document.getElementById('dots-calc');
+  mc.innerHTML=''; cc.innerHTML='';
+  MCQ.forEach(q=>{
+    const d=document.createElement('button');
+    d.className='q-dot';
+    d.id='dot-'+q.n;
+    d.textContent=q.n;
+    d.onclick=()=>{state.section='mcq';navigateTo(q.n);};
+    mc.appendChild(d);
+  });
+  CALC.forEach(q=>{
+    const d=document.createElement('button');
+    d.className='q-dot';
+    d.id='dot-'+q.n;
+    d.textContent=q.n;
+    d.onclick=()=>{state.section='calc';navigateTo(q.n);};
+    cc.appendChild(d);
+  });
+}
+
+function updateDots() {
+  MCQ.forEach(q=>{
+    const d=document.getElementById('dot-'+q.n);
+    if(!d) return;
+    d.className='q-dot';
+    const a=state.answers[q.n];
+    if(a) {
+      if(state.mode==='practice') {
+        d.classList.add(a===q.ans?'correct':'wrong');
+      } else {
+        d.classList.add('answered');
+      }
+    }
+    if(state.section==='mcq'&&state.currentQ===q.n) d.classList.add('current');
+  });
+  CALC.forEach(q=>{
+    const d=document.getElementById('dot-'+q.n);
+    if(!d) return;
+    d.className='q-dot';
+    if(state.calcRevealed[q.n]) d.classList.add('answered');
+    if(state.calcChecked[q.n]) d.classList.add('correct');
+    if(state.section==='calc'&&state.currentQ===q.n) d.classList.add('current');
+  });
+  // Stats
+  const correct=MCQ.filter(q=>state.answers[q.n]===q.ans).length;
+  const wrong=MCQ.filter(q=>state.answers[q.n]&&state.answers[q.n]!==q.ans).length;
+  const calcDone=Object.values(state.calcChecked).filter(Boolean).length;
+  document.getElementById('stat-correct').textContent=correct;
+  document.getElementById('stat-wrong').textContent=wrong;
+  document.getElementById('stat-calc').textContent=calcDone+'/30';
+  const answered=Object.keys(state.answers).length;
+  document.getElementById('score-badge').textContent=answered+'/'+MCQ.length+' 答';
+  document.getElementById('mcq-tab-count').textContent=answered+'/'+MCQ.length;
+  document.getElementById('calc-tab-count').textContent=Object.keys(state.calcRevealed).length+'/30';
+  // Progress (combined)
+  const pct=((answered+Object.keys(state.calcRevealed).length)/(MCQ.length+CALC.length))*100;
+  document.getElementById('prog').style.width=pct+'%';
+}
+
+function switchSection(sec) {
+  state.section=sec;
+  document.getElementById('tab-mcq').classList.toggle('active',sec==='mcq');
+  document.getElementById('tab-calc').classList.toggle('active',sec==='calc');
+  if(sec==='mcq') state.currentQ=MCQ[0].n;
+  else state.currentQ=CALC[0].n;
+  renderQuestion();
+}
+
+function navigateTo(n) {
+  state.currentQ=n;
+  document.getElementById('tab-mcq').classList.toggle('active',state.section==='mcq');
+  document.getElementById('tab-calc').classList.toggle('active',state.section==='calc');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (typeof saveProgress === "function") saveProgress();
+  if (typeof saveLastQ === "function") saveLastQ();
+  updateDots();
+  const c=document.getElementById('content');
+  if(state.section==='mcq') {
+    const q=MCQ.find(x=>x.n===state.currentQ)||MCQ[0];
+    renderMCQ(q,c);
+  } else {
+    const q=CALC.find(x=>x.n===state.currentQ)||CALC[0];
+    renderCalc(q,c);
+  }
+  window.scrollTo(0,0);
+  document.getElementById('content').scrollTop=0;
+}
+
+function renderMCQ(q,c) {
+  const answered=state.answers[q.n];
+  const isCorrect=answered&&answered===q.ans;
+  const showAnswer=answered;
+  
+  c.innerHTML=`
+    <div class="q-card">
+      <div class="q-header">
+        <div class="q-num">Q${q.n}</div>
+        <div class="q-chapter" style="flex:1">${getChapter(q.n)}</div>
+        ${answered?`<div style="font-size:1.3rem">${isCorrect?'✅':'❌'}</div>`:''}
+      </div>
+      <div class="q-body">
+        <div class="q-text">${q.q}</div>
+        <div class="options" id="opts-${q.n}">
+          ${q.opts.map((opt,i)=>{
+            const letter=opt[0];
+            let cls='opt-btn';
+            if(answered) {
+              if(letter===q.ans&&state.mode==='practice') cls+=' correct';
+              else if(letter===answered&&answered!==q.ans&&state.mode==='practice') cls+=' wrong';
+              else if(letter===answered) cls+=' selected';
+            }
+            return `<button class="${cls}" ${answered?'disabled':''} onclick="selectOpt(${q.n},'${letter}')"><span class=\"opt-letter\">${letter}</span><span class=\"opt-text\">${opt.replace(/^[A-D]\. /,'')}</span></button>`;
+          }).join('')}
+        </div>
+        ${showAnswer?`<div class="expl-box show">${q.expl}</div>`:''}
+        ${answered&&false /* exam mode removed */?`<div class="exam-note">✅ 已作答完畢。所有解析將在查看成績後顯示。</div>`:''}
+      </div>
+    </div>
+    <div class="q-nav">
+      <button class="nav-btn" onclick="prevQ()" ${(state.section==='mcq'&&q.n===1)||(state.section==='calc'&&q.n===71)?'disabled':''}>← 上一題</button>
+      <span class="q-counter">第 ${state.section==='mcq'?(MCQ.findIndex(x=>x.n===state.currentQ)+1):(CALC.findIndex(x=>x.n===state.currentQ)+1)} / ${state.section==='mcq'?MCQ.length:CALC.length} 題</span>
+      <button class="nav-btn primary" onclick="nextQ()">${isLastQ()?'📊 查看成績':'下一題 →'}</button>
+    </div>`;
+}
+
+function renderCalc(q,c) {
+  const revealed=state.calcRevealed[q.n];
+  const checked=state.calcChecked[q.n];
+  c.innerHTML=`
+    <div class="q-card">
+      <div class="q-header">
+        <div class="q-num">Q${q.n}</div>
+        <div style="flex:1">
+          <div class="q-chapter">計算題 — ${q.ch}</div>
+        </div>
+        ${revealed?'<div style="font-size:1.1rem;color:#a0c4e8;">✅ 已查看解答</div>':''}
+      </div>
+      <div class="q-body">
+        <div class="calc-q-box">${q.q}</div>
+        <div class="given-box">
+          <div class="given-label">📌 已知條件</div>
+          <div>${q.given}</div>
+        </div>
+        <div class="work-area">
+          <div class="work-label">✏ 計算作答區</div>
+          <textarea placeholder="在此輸入計算過程..." id="work-${q.n}">${(window._calcWork&&window._calcWork[q.n])||''}</textarea>
+        </div>
+        <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;">
+          <button class="reveal-btn" onclick="revealCalc(${q.n})">${revealed?'🔍 重看解答':'📖 查看解答'}</button>
+          ${revealed?`
+          <label class="calc-self-check">
+            <input type="checkbox" ${checked?'checked':''} onchange="toggleCalcCheck(${q.n},this.checked)">
+            我計算正確 ✓
+          </label>`:''};
+        </div>
+        <div class="solution-box ${revealed?'show':''}" id="sol-${q.n}">
+          <div class="sol-header">📐 解題步驟</div>
+          <div class="steps">
+            ${q.steps.map((s,i)=>`
+            <div class="step-row">
+              <div class="step-num">${i+1}</div>
+              <div class="step-text">${s}</div>
+            </div>`).join('')}
+          </div>
+          <div class="ans-banner">✓ 答案：${q.ans}</div>
+        </div>
+      </div>
+    </div>
+    <div class="q-nav">
+      <button class="nav-btn" onclick="prevQ()" ${q.n===71?'disabled':''}>← 上一題</button>
+      <span class="q-counter">計算題 第 ${CALC.findIndex(x=>x.n===state.currentQ)+1} / ${CALC.length} 題</span>
+      <button class="nav-btn primary" onclick="nextQ()">${isLastQ()?'📊 查看成績':'下一題 →'}</button>
+    </div>`;
+  // Save work area on input
+  document.getElementById('work-'+q.n)?.addEventListener('input',e=>{
+    if(!window._calcWork) window._calcWork={};
+    window._calcWork[q.n]=e.target.value;
+  });
+}
+
+function selectOpt(n, letter) {
+  if(state.answers[n]) return;
+  state.answers[n]=letter;
+  // Track wrong answers in practice/random mode
+  if(state.mode !== 'exam') {
+    const q = MCQ.find(x=>x.n===n);
+    if(q && letter !== q.ans) addWrong(n, 'mcq', letter);
+  }
+  renderQuestion();
+  updateDots();
+}
+
+function revealCalc(n) {
+  state.calcRevealed[n]=true;
+  const sol=document.getElementById('sol-'+n);
+  if(sol) sol.classList.add('show');
+  renderQuestion();
+  updateDots();
+}
+
+function toggleCalcCheck(n, val) {
+  state.calcChecked[n]=val;
+  // val=false means user marked it wrong
+  if(!val && state.mode !== 'exam') addWrong(n, 'calc', null);
+  updateDots();
+}
+
+function isLastQ() {
+  if(state.mode==='random') return randIsLast();
+  if(state.section==='mcq') return state.currentQ===MCQ[MCQ.length-1].n;
+  return state.currentQ===CALC[CALC.length-1].n;
+}
+
+function prevQ() {
+  if(state.mode==='random') { randPrev(); return; }
+  if(state.section==='mcq') {
+    const idx=MCQ.findIndex(q=>q.n===state.currentQ);
+    if(idx>0) state.currentQ=MCQ[idx-1].n;
+  } else {
+    const idx=CALC.findIndex(q=>q.n===state.currentQ);
+    if(idx>0) state.currentQ=CALC[idx-1].n;
+    else { state.section='mcq'; state.currentQ=MCQ[MCQ.length-1].n; }
+  }
+  renderQuestion();
+}
+
+function nextQ() {
+  if(state.mode==='random') { randNext(); return; }
+  if(isLastQ()) { showResults(); return; }
+  if(state.section==='mcq') {
+    const idx=MCQ.findIndex(q=>q.n===state.currentQ);
+    if(idx<MCQ.length-1) state.currentQ=MCQ[idx+1].n;
+    else { state.section='calc'; state.currentQ=CALC[0].n; }
+  } else {
+    const idx=CALC.findIndex(q=>q.n===state.currentQ);
+    if(idx<CALC.length-1) state.currentQ=CALC[idx+1].n;
+  }
+  renderQuestion();
+}
+
+function showResults() {
+  clearInterval(state.timerRef);
+  document.getElementById('app').style.display='none';
+  const el=document.getElementById('results');
+  el.style.display='block';
+  
+  // Determine which MCQ/CALC questions are in scope
+  const scopeMCQ = state.mode==='random'
+    ? state.randomPool.filter(x=>x.type==='mcq').map(x=>MCQ.find(q=>q.n===x.n)).filter(Boolean)
+    : MCQ;
+  const scopeCALC = state.mode==='random'
+    ? state.randomPool.filter(x=>x.type==='calc').map(x=>CALC.find(q=>q.n===x.n)).filter(Boolean)
+    : CALC;
+  const correct=scopeMCQ.filter(q=>state.answers[q.n]===q.ans).length;
+  const wrong=scopeMCQ.filter(q=>state.answers[q.n]&&state.answers[q.n]!==q.ans).length;
+  const unanswered=scopeMCQ.length-Object.keys(state.answers).length;
+  const calcScore=scopeCALC.filter(q=>state.calcChecked[q.n]).length*2;
+  const mcqScore=correct;
+  const total=mcqScore+calcScore;
+  const maxScore=scopeMCQ.length*1+scopeCALC.length*2;
+  const pct=maxScore>0?Math.round(total/maxScore*100):0;
+  
+  const m=Math.floor(state.seconds/60);
+  const s=state.seconds%60;
+  const timeStr=m+'分'+s+'秒';
+  
+  let grade='',gradeColor='';
+  if(pct>=85){grade='優秀 🏆';gradeColor='#059669';}
+  else if(pct>=70){grade='通過 ✅';gradeColor='#0891B2';}
+  else if(pct>=60){grade='及格 📝';gradeColor='#E97316';}
+  else{grade='繼續加油 💪';gradeColor='#DC2626';}
+  
+  const wrongItems=scopeMCQ.filter(q=>state.answers[q.n]&&state.answers[q.n]!==q.ans);
+  const unansweredItems=scopeMCQ.filter(q=>!state.answers[q.n]);
+  
+  el.innerHTML=`
+    <div class="res-hero">
+      <div style="font-size:2.5rem;margin-bottom:.3rem;">📊 成績報告</div>
+      <div class="res-score">${total}</div>
+      <div class="res-total">/ ${maxScore} 分（${pct}%）</div>
+      <div class="res-grade" style="color:${gradeColor}">${grade}</div>
+      <div style="font-size:.9rem;color:#a0c4e8;margin-top:.3rem;">用時：${timeStr}</div>
+      <div class="res-grid">
+        <div class="res-stat"><div class="res-stat-n">${mcqScore}/70</div><div class="res-stat-l">選擇題得分</div></div>
+        <div class="res-stat"><div class="res-stat-n">${calcScore}/60</div><div class="res-stat-l">計算題得分（自評）</div></div>
+        <div class="res-stat"><div class="res-stat-n">${correct}/${correct+wrong}</div><div class="res-stat-l">選擇題答對率</div></div>
+      </div>
+    </div>
+    
+    <div class="res-card">
+      <h3>🔍 選擇題詳細分析</h3>
+      <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;">
+        <span style="background:#dcfce7;color:#059669;padding:.3rem .7rem;border-radius:6px;font-size:.85rem;">✅ 答對 ${correct} 題</span>
+        <span style="background:#fee2e2;color:#dc2626;padding:.3rem .7rem;border-radius:6px;font-size:.85rem;">❌ 答錯 ${wrong} 題</span>
+        <span style="background:#fef3c7;color:#d97706;padding:.3rem .7rem;border-radius:6px;font-size:.85rem;">⬜ 未答 ${unanswered} 題</span>
+      </div>
+      ${wrongItems.length===0&&unansweredItems.length===0?'<div style="color:var(--green);font-weight:600;padding:1rem;text-align:center;">🎉 選擇題全部答對！</div>':''}
+      ${wrongItems.map(q=>`
+        <div class="review-item">
+          <div class="ri-icon">❌</div>
+          <div class="ri-q">
+            <b>Q${q.n} ${getChapter(q.n)}</b>
+            ${q.q}<br>
+            <small>您的答案：<span style="color:var(--red)">${state.answers[q.n]}</span>　正解：<span style="color:var(--green)">${q.ans}</span>　${q.expl}</small>
+          </div>
+        </div>`).join('')}
+      ${unansweredItems.map(q=>`
+        <div class="review-item">
+          <div class="ri-icon">⬜</div>
+          <div class="ri-q">
+            <b>Q${q.n} ${getChapter(q.n)} — 未作答</b>
+            ${q.q}<br><small>正解：<span style="color:var(--green)">${q.ans}</span>　${q.expl}</small>
+          </div>
+        </div>`).join('')}
+    </div>
+    
+    <div class="res-card">
+      <h3>🧮 計算題答案（自評參考）</h3>
+      ${CALC.map(q=>`
+        <div class="calc-review-item">
+          <div class="cri-q">Q${q.n} ${q.ch} ${state.calcChecked[q.n]?'✅':''} </div>
+          <div class="cri-ans">▶ ${q.ans}</div>
+        </div>`).join('')}
+    </div>
+    
+    <div style="text-align:center;padding:1.5rem 0 3rem;">
+      <button class="btn-retry" onclick="location.reload()">🔄 重新作答</button>
+    </div>`;
+}
+
+
+// Mobile: add grid toggle button
+function addMobileGridToggle() {
+  if (window.innerWidth > 768) return;
+  const existing = document.getElementById('grid-toggle');
+  if (existing) return;
+  const btn = document.createElement('button');
+  btn.id = 'grid-toggle';
+  btn.textContent = '▼ 顯示題號總覽';
+  btn.style.display = 'none'; // will be shown by CSS media query
+  btn.onclick = function() {
+    const grid = document.querySelector('.q-grid');
+    const isOpen = grid.classList.contains('mobile-open');
+    grid.classList.toggle('mobile-open', !isOpen);
+    btn.textContent = isOpen ? '▼ 顯示題號總覽' : '▲ 收起題號總覽';
+  };
+  const aside = document.querySelector('aside');
+  const secTabs = document.querySelector('.sec-tabs');
+  aside.insertBefore(btn, secTabs.nextSibling);
+}
+
+// Init
+document.getElementById('start').style.display='flex';
+document.getElementById('app').style.display='none';
+</script>
+
+<!-- Wrong Answer Panel -->
+<div id="wrong-panel" onclick="closeWrongPanelOutside(event)">
+  <div class="wrong-drawer" id="wrong-drawer">
+    <div class="wrong-header">
+      <h2>❌ 錯題本 <span id="wrong-total-count" class="wrong-count-badge">0</span></h2>
+      <div style="display:flex;gap:.6rem;align-items:center;">
+        <button onclick="startWrongQuiz()" style="background:var(--orange);border:none;color:white;
+          padding:.3rem .8rem;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:700;font-family:inherit;">
+          🔁 重練錯題
+        </button>
+        <button class="wrong-close" onclick="closeWrongPanel()">✕</button>
+      </div>
+    </div>
+    <div class="wrong-toolbar">
+      <button onclick="clearAllWrong()" style="border:1px solid #DC2626;color:#DC2626;background:white;
+        padding:.3rem .8rem;border-radius:6px;cursor:pointer;font-size:.82rem;font-family:inherit;">
+        🗑 清除所有錯題
+      </button>
+      <span id="wrong-stats" style="font-size:.82rem;color:var(--gray);align-self:center;"></span>
+    </div>
+    <div class="wrong-list" id="wrong-list">
+      <div class="wrong-empty"><div class="big">🎉</div>目前沒有錯題記錄！</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
